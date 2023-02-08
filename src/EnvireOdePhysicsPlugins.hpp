@@ -33,7 +33,8 @@ namespace mars
         class EnvireOdePhysicsPlugins : public lib_manager::LibInterface,
                                         public envire::core::GraphEventDispatcher,
                                         public envire::core::GraphItemEventDispatcher<envire::core::Item<::smurf::Frame>>,
-                                        public envire::core::GraphItemEventDispatcher<envire::core::Item<::smurf::Inertial>>
+                                        public envire::core::GraphItemEventDispatcher<envire::core::Item<::smurf::Inertial>>,
+                                        public envire::core::GraphItemEventDispatcher<envire::core::Item<::smurf::Joint>>
         {
 
         public:
@@ -57,6 +58,7 @@ namespace mars
             virtual void itemAdded(const envire::core::ItemAddedEvent& e) override;
             virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::smurf::Frame>>& e) override;
             virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::smurf::Inertial>>& e) override;
+            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::smurf::Joint>>& e) override;
 
         private:
             ode_physics::WorldPhysicsLoader *physicsLoader;
