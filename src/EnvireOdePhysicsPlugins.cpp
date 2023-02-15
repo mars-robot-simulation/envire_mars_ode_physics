@@ -27,6 +27,7 @@
 #include <mars_interfaces/sim/LoadCenter.h>
 #include <mars_interfaces/sim/LoadSceneInterface.h>
 #include <mars_interfaces/sim/DynamicObject.hpp>
+#include <mars_interfaces/sim/JointInterface.h>
 #include <lib_manager/LibInterface.hpp>
 #include <lib_manager/LibManager.hpp>
 
@@ -109,12 +110,20 @@ namespace mars
                 ConfigMap config;
                 config["name"] = e.frame;
                 // we are responsible
-                DynamicObject *newFrame = physicsInterface->createFrame(ControlCenter::theDataBroker, config);
+                std::shared_ptr<DynamicObject> newFrame = physicsInterface->createFrame(ControlCenter::theDataBroker, config);
 
                 // todo: set pose
                 envire::core::Transform t = ControlCenter::envireGraph->getTransform(SIM_CENTER_FRAME_NAME, e.frame);
                 newFrame->setPosition(t.transform.translation);
                 newFrame->setRotation(t.transform.orientation);
+
+                // store DynamicObject in graph
+                DynamicObjectItem item;
+                item.dynamicObject = newFrame;
+                item.pluginName = "mars_ode_physics";
+                envire::core::Item<DynamicObjectItem>::Ptr objectItemPtr(new envire::core::Item<DynamicObjectItem>(item));
+                //envire::core::Item<DynamicObject*>::Ptr objectItemPtr(new envire::core::Item<DynamicObject*>(newFrame));
+                ControlCenter::envireGraph->addItemToFrame(e.frame, objectItemPtr);
             }
         }
 
@@ -238,7 +247,12 @@ namespace mars
 
                 // reduce DataBroker load
                 config["reducedDataPackage"] = true;
-                JointInterface *jInterface = physicsInterface->createJoint(ControlCenter::theDataBroker, config);
+                std::shared_ptr<JointInterface> jInterface = physicsInterface->createJoint(ControlCenter::theDataBroker, config);
+                // store JointInterface in graph
+                JointInterfaceItem item;
+                item.jointInterface = jInterface;
+                envire::core::Item<JointInterfaceItem>::Ptr jointItemPtr(new envire::core::Item<JointInterfaceItem>(item));
+                ControlCenter::envireGraph->addItemToFrame(e.frame, jointItemPtr);
             }
         }
 
