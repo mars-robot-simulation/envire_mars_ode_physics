@@ -62,6 +62,8 @@ namespace mars
 
         private:
             ode_physics::WorldPhysicsLoader *physicsLoader;
+
+            std::shared_ptr<interfaces::PhysicsInterface> getPhysicsInterface(envire::core::FrameId frame);
         };
 
     } // end of namespace envire_ode_physics

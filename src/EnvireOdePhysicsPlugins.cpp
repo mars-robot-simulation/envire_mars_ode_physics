@@ -83,6 +83,35 @@ namespace mars
 
          */
 
+        std::shared_ptr<PhysicsInterface> EnvireOdePhysicsPlugins::getPhysicsInterface(envire::core::FrameId frame)
+        {
+            // search for physics interface in graph
+            bool done = false;
+            while(!done)
+            {
+                const envire::core::GraphTraits::vertex_descriptor vertex = ControlCenter::envireGraph->vertex(frame);
+                envire::core::GraphTraits::vertex_descriptor parentVertex = ControlCenter::graphTreeView->tree[vertex].parent;
+                // todo: check if this check is correct
+                if(parentVertex)
+                {
+                    frame = ControlCenter::envireGraph->getFrameId(parentVertex);
+                    try
+                    {
+                        envire::core::EnvireGraph::ItemIterator<envire::core::Item<PhysicsInterfaceItem>> it = ControlCenter::envireGraph->getItem<envire::core::Item<PhysicsInterfaceItem>>(frame);
+                        return it->getData().physicsInterface;
+                    }
+                    catch (...)
+                    {
+                    }
+                }
+                else
+                {
+                    done = true;
+                }
+            }
+            return nullptr;
+        }
+
         void EnvireOdePhysicsPlugins::itemAdded(const envire::core::ItemAddedEvent& e)
         {
             LOG_DEBUG("Added generic item: %s", e.frame.c_str());
@@ -92,11 +121,8 @@ namespace mars
 
         void EnvireOdePhysicsPlugins::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::smurf::Frame>>& e)
         {
-            std::shared_ptr<PhysicsInterface> physicsInterface = nullptr;
-            if(ControlCenter::activePhysicsInterface)
-            {
-                physicsInterface = ControlCenter::activePhysicsInterface;
-            }
+            std::shared_ptr<PhysicsInterface> physicsInterface = getPhysicsInterface(e.frame);
+
             // todo: else search the tree upwards for a PhysicsInterface
             if(!physicsInterface)
             {
@@ -136,12 +162,7 @@ namespace mars
 
         void EnvireOdePhysicsPlugins::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::smurf::Inertial>>& e)
         {
-            std::shared_ptr<PhysicsInterface> physicsInterface = nullptr;
-            if(ControlCenter::activePhysicsInterface)
-            {
-                physicsInterface = ControlCenter::activePhysicsInterface;
-            }
-            // todo: else search the tree upwards for a PhysicsInterface
+            std::shared_ptr<PhysicsInterface> physicsInterface = getPhysicsInterface(e.frame);
             if(!physicsInterface)
             {
                 LOG_ERROR("EnvireOdePhysicsPlugins::itemAdded: no PhysicsInterface found!");
@@ -182,11 +203,7 @@ namespace mars
 
         void EnvireOdePhysicsPlugins::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::smurf::Joint>>& e)
         {
-            std::shared_ptr<PhysicsInterface> physicsInterface = nullptr;
-            if(ControlCenter::activePhysicsInterface)
-            {
-                physicsInterface = ControlCenter::activePhysicsInterface;
-            }
+            std::shared_ptr<PhysicsInterface> physicsInterface = getPhysicsInterface(e.frame);
             // todo: else search the tree upwards for a PhysicsInterface
             if(!physicsInterface)
             {
