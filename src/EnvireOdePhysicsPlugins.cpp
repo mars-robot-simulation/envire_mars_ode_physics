@@ -52,7 +52,6 @@ namespace mars
         EnvireOdePhysicsPlugins::EnvireOdePhysicsPlugins(lib_manager::LibManager *theManager) :
             lib_manager::LibInterface(theManager)
         {
-            physicsLoader = libManager->getLibraryAs<ode_physics::WorldPhysicsLoader>("mars_ode_physics", true);
             //GraphEventDispatcher::subscribe(ControlCenter::envireGraph.get());
             GraphItemEventDispatcher<envire::core::Item<::smurf::Frame>>::subscribe(ControlCenter::envireGraph.get());
             GraphItemEventDispatcher<envire::core::Item<::smurf::Inertial>>::subscribe(ControlCenter::envireGraph.get());
@@ -61,11 +60,6 @@ namespace mars
 
         EnvireOdePhysicsPlugins::~EnvireOdePhysicsPlugins()
         {
-            // TODO: do we need to delete control?
-            if(physicsLoader)
-            {
-                libManager->releaseLibrary("mars_ode_physics");
-            }
         }
 
         /*

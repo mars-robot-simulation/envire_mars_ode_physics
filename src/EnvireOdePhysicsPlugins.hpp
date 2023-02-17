@@ -61,8 +61,6 @@ namespace mars
             virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::smurf::Joint>>& e) override;
 
         private:
-            ode_physics::WorldPhysicsLoader *physicsLoader;
-
             std::shared_ptr<interfaces::PhysicsInterface> getPhysicsInterface(envire::core::FrameId frame);
         };
 
