@@ -77,7 +77,7 @@ namespace mars
 
          */
 
-        std::shared_ptr<PhysicsInterface> EnvireOdePhysicsPlugins::getPhysicsInterface(envire::core::FrameId frame)
+        std::shared_ptr<SubControlCenter> EnvireOdePhysicsPlugins::getControlCenter(envire::core::FrameId frame)
         {
             // search for physics interface in graph
             bool done = false;
@@ -91,8 +91,9 @@ namespace mars
                     frame = ControlCenter::envireGraph->getFrameId(parentVertex);
                     try
                     {
-                        envire::core::EnvireGraph::ItemIterator<envire::core::Item<PhysicsInterfaceItem>> it = ControlCenter::envireGraph->getItem<envire::core::Item<PhysicsInterfaceItem>>(frame);
-                        return it->getData().physicsInterface;
+                        using SubControlItem = envire::core::Item<std::shared_ptr<SubControlCenter>>;
+                        envire::core::EnvireGraph::ItemIterator<SubControlItem> it = ControlCenter::envireGraph->getItem<SubControlItem>(frame);
+                        return it->getData();
                     }
                     catch (...)
                     {
@@ -115,14 +116,15 @@ namespace mars
 
         void EnvireOdePhysicsPlugins::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::smurf::Frame>>& e)
         {
-            std::shared_ptr<PhysicsInterface> physicsInterface = getPhysicsInterface(e.frame);
+            std::shared_ptr<SubControlCenter> control = getControlCenter(e.frame);
 
             // todo: else search the tree upwards for a PhysicsInterface
-            if(!physicsInterface)
+            if(!control)
             {
-                LOG_ERROR("EnvireOdePhysicsPlugins::itemAdded: no PhysicsInterface found!");
+                LOG_ERROR("EnvireOdePhysicsPlugins::itemAdded: no control found!");
             }
-            if(physicsInterface->getLibName() == "mars_ode_physics")
+            // TODO: why we need to hardcode the name of the lib???
+            if(control->physics->getLibName() == "mars_ode_physics")
             {
                 LOG_WARN("OdePhysicsPlugin: Added smurf::Frame item: %s", e.frame.c_str());
                 LOG_DEBUG("\t %s", e.item->getData().getName().c_str());
@@ -130,7 +132,7 @@ namespace mars
                 ConfigMap config;
                 config["name"] = e.frame;
                 // we are responsible
-                std::shared_ptr<DynamicObject> newFrame = physicsInterface->createFrame(ControlCenter::theDataBroker, config);
+                std::shared_ptr<DynamicObject> newFrame = control->physics->createFrame(ControlCenter::theDataBroker, config);
 
                 // todo: set pose
                 envire::core::Transform t = ControlCenter::envireGraph->getTransform(SIM_CENTER_FRAME_NAME, e.frame);
@@ -140,7 +142,7 @@ namespace mars
                 // store DynamicObject in graph
                 DynamicObjectItem item;
                 item.dynamicObject = newFrame;
-                item.pluginName = "mars_ode_physics";
+                item.pluginName = "mars_ode_physics";   // TODO: why we need to hardcode the name of the lib???
                 envire::core::Item<DynamicObjectItem>::Ptr objectItemPtr(new envire::core::Item<DynamicObjectItem>(item));
                 //envire::core::Item<DynamicObject*>::Ptr objectItemPtr(new envire::core::Item<DynamicObject*>(newFrame));
                 ControlCenter::envireGraph->addItemToFrame(e.frame, objectItemPtr);
@@ -156,12 +158,13 @@ namespace mars
 
         void EnvireOdePhysicsPlugins::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::smurf::Inertial>>& e)
         {
-            std::shared_ptr<PhysicsInterface> physicsInterface = getPhysicsInterface(e.frame);
-            if(!physicsInterface)
+            std::shared_ptr<SubControlCenter> control = getControlCenter(e.frame);
+            if(!control)
             {
-                LOG_ERROR("EnvireOdePhysicsPlugins::itemAdded: no PhysicsInterface found!");
+                LOG_ERROR("EnvireOdePhysicsPlugins::itemAdded: no control found!");
             }
-            if(physicsInterface->getLibName() == "mars_ode_physics")
+            // TODO: why we need to hardcode the name of the lib???
+            if(control->physics->getLibName() == "mars_ode_physics")
             {
                 LOG_INFO("OdePhysicsPlugin: Added smurf::Inertial item: %s", e.frame.c_str());
                 // todo: check that we really have the frame in the map
@@ -191,19 +194,19 @@ namespace mars
                 envire::core::Transform t = ControlCenter::envireGraph->getTransform(parentVertex, vertex);
                 vectorToConfigItem(&(config["position"]), &(t.transform.translation));
                 quaternionToConfigItem(&(config["orientation"]), &(t.transform.orientation));
-                physicsInterface->createObject(config);
+                control->physics->createObject(config);
             }
         }
 
         void EnvireOdePhysicsPlugins::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::smurf::Joint>>& e)
         {
-            std::shared_ptr<PhysicsInterface> physicsInterface = getPhysicsInterface(e.frame);
-            // todo: else search the tree upwards for a PhysicsInterface
-            if(!physicsInterface)
+            std::shared_ptr<SubControlCenter> control = getControlCenter(e.frame);
+            if(!control)
             {
-                LOG_ERROR("EnvireOdePhysicsPlugins::itemAdded: no PhysicsInterface found!");
+                LOG_ERROR("EnvireOdePhysicsPlugins::itemAdded: no control found!");
             }
-            if(physicsInterface->getLibName() == "mars_ode_physics")
+            // TODO: why we need to hardcode the name of the lib???
+            if(control->physics->getLibName() == "mars_ode_physics")
             {
                 LOG_DEBUG("OdePhysicsPlugin: Added smurf::joint item: %s", e.frame.c_str());
                 LOG_DEBUG("\t %s", e.item->getData().getName().c_str());
@@ -211,9 +214,9 @@ namespace mars
 
                 ConfigMap config;
                 // todo: prefix have to move to joint strings directly
-                config["name"] = ControlCenter::prefix + joint->name;
-                config["parent_link_name"] = ControlCenter::prefix + joint->parent_link_name;
-                config["child_link_name"] = ControlCenter::prefix + joint->child_link_name;
+                config["name"] = control->getPrefix() + joint->name;
+                config["parent_link_name"] = control->getPrefix() + joint->parent_link_name;
+                config["child_link_name"] = control->getPrefix() + joint->child_link_name;
                 // deprecated: config["anchorpos"] = "node2"; // always use the child_link as the anchor since joint and child_link are in the same frame
                 envire::core::Transform t = ControlCenter::envireGraph->getTransform(SIM_CENTER_FRAME_NAME, e.frame);
                 Vector p = t.transform.translation;
@@ -258,7 +261,7 @@ namespace mars
 
                 // reduce DataBroker load
                 config["reducedDataPackage"] = true;
-                std::shared_ptr<JointInterface> jInterface = physicsInterface->createJoint(ControlCenter::theDataBroker, config);
+                std::shared_ptr<JointInterface> jInterface = control->physics->createJoint(ControlCenter::theDataBroker, config);
                 // store JointInterface in graph
                 JointInterfaceItem item;
                 item.jointInterface = jInterface;
