@@ -34,9 +34,7 @@ namespace mars
                                         public envire::core::GraphEventDispatcher,
                                         public envire::core::GraphItemEventDispatcher<envire::core::Item<::smurf::Frame>>,
                                         public envire::core::GraphItemEventDispatcher<envire::core::Item<::smurf::Inertial>>,
-                                        public envire::core::GraphItemEventDispatcher<envire::core::Item<::smurf::Joint>>,
-                                        public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::Link>>,
-                                        public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::Inertia>>
+                                        public envire::core::GraphItemEventDispatcher<envire::core::Item<::smurf::Joint>>
         {
 
         public:
@@ -59,9 +57,7 @@ namespace mars
             // envire callbacks
             virtual void itemAdded(const envire::core::ItemAddedEvent& e) override;
             virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::smurf::Frame>>& e) override;
-            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::Link>>& e) override;
             virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::smurf::Inertial>>& e) override;
-            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::Inertia>>& e) override;
             virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::smurf::Joint>>& e) override;
 
         private:
