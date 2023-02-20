@@ -10,5 +10,6 @@
     <depend package="tools/configmaps" />
     <depend package="envire/envire_core" />
     <depend package="envire/envire_smurf" />
+    <depend package="envire/envire_base_types" />
     <tags>needs_opt</tags>
 </package>

@@ -16,6 +16,9 @@
 
 #include <smurf/Robot.hpp>
 
+#include <envire_base_types/Link.hpp>
+#include <envire_base_types/Inertia.hpp>
+
 #include "EnvireOdePhysicsPlugins.hpp"
 
 //#include "PhysicsMapper.h"
@@ -56,6 +59,8 @@ namespace mars
             GraphItemEventDispatcher<envire::core::Item<::smurf::Frame>>::subscribe(ControlCenter::envireGraph.get());
             GraphItemEventDispatcher<envire::core::Item<::smurf::Inertial>>::subscribe(ControlCenter::envireGraph.get());
             GraphItemEventDispatcher<envire::core::Item<::smurf::Joint>>::subscribe(ControlCenter::envireGraph.get());
+            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::Link>>::subscribe(ControlCenter::envireGraph.get());
+            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::Inertia>>::subscribe(ControlCenter::envireGraph.get());
         }
 
         EnvireOdePhysicsPlugins::~EnvireOdePhysicsPlugins()
@@ -89,15 +94,10 @@ namespace mars
                 if(parentVertex)
                 {
                     frame = ControlCenter::envireGraph->getFrameId(parentVertex);
-                    try
-                    {
-                        using SubControlItem = envire::core::Item<std::shared_ptr<SubControlCenter>>;
-                        envire::core::EnvireGraph::ItemIterator<SubControlItem> it = ControlCenter::envireGraph->getItem<SubControlItem>(frame);
-                        return it->getData();
-                    }
-                    catch (...)
-                    {
-                    }
+
+                    using SubControlItem = envire::core::Item<std::shared_ptr<SubControlCenter>>;
+                    if (ControlCenter::envireGraph->containsItems<SubControlItem>(frame))
+                        return ControlCenter::envireGraph->getItem<SubControlItem>(frame)->getData();
                 }
                 else
                 {
@@ -131,6 +131,39 @@ namespace mars
                 //e.item->getData() // provides the smurf joint class shared pointer
                 ConfigMap config;
                 config["name"] = e.frame;
+                // we are responsible
+                std::shared_ptr<DynamicObject> newFrame = control->physics->createFrame(ControlCenter::theDataBroker, config);
+
+                // todo: set pose
+                envire::core::Transform t = ControlCenter::envireGraph->getTransform(SIM_CENTER_FRAME_NAME, e.frame);
+                newFrame->setPosition(t.transform.translation);
+                newFrame->setRotation(t.transform.orientation);
+
+                // store DynamicObject in graph
+                DynamicObjectItem item;
+                item.dynamicObject = newFrame;
+                item.pluginName = "mars_ode_physics";   // TODO: why we need to hardcode the name of the lib???
+                envire::core::Item<DynamicObjectItem>::Ptr objectItemPtr(new envire::core::Item<DynamicObjectItem>(item));
+                //envire::core::Item<DynamicObject*>::Ptr objectItemPtr(new envire::core::Item<DynamicObject*>(newFrame));
+                ControlCenter::envireGraph->addItemToFrame(e.frame, objectItemPtr);
+            }
+        }
+
+        void EnvireOdePhysicsPlugins::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::Link>>& e)
+        {
+            std::shared_ptr<SubControlCenter> control = getControlCenter(e.frame);
+
+            // todo: else search the tree upwards for a PhysicsInterface
+            if(!control)
+            {
+                LOG_ERROR("EnvireOdePhysicsPlugins::itemAdded: no control found!");
+            }
+            // TODO: why we need to hardcode the name of the lib???
+            if(control->physics->getLibName() == "mars_ode_physics")
+            {
+                LOG_WARN("OdePhysicsPlugin: Added envire::base_types::Link item: %s", e.frame.c_str());
+                LOG_DEBUG("\t %s", e.item->getData().name.c_str());
+                ConfigMap config = e.item->getData().getFullConfigMap();
                 // we are responsible
                 std::shared_ptr<DynamicObject> newFrame = control->physics->createFrame(ControlCenter::theDataBroker, config);
 
@@ -194,6 +227,50 @@ namespace mars
                 envire::core::Transform t = ControlCenter::envireGraph->getTransform(parentVertex, vertex);
                 vectorToConfigItem(&(config["position"]), &(t.transform.translation));
                 quaternionToConfigItem(&(config["orientation"]), &(t.transform.orientation));
+                control->physics->createObject(config);
+            }
+        }
+
+        void EnvireOdePhysicsPlugins::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::Inertia>>& e)
+        {
+            std::shared_ptr<SubControlCenter> control = getControlCenter(e.frame);
+            if(!control)
+            {
+                LOG_ERROR("EnvireOdePhysicsPlugins::itemAdded: no control found!");
+            }
+            // TODO: why we need to hardcode the name of the lib???
+            if(control->physics->getLibName() == "mars_ode_physics")
+            {
+                LOG_INFO("OdePhysicsPlugin: Added envire::base_types::Inertia item: %s", e.frame.c_str());
+                // todo: check that we really have the frame in the map
+                const envire::core::GraphTraits::vertex_descriptor vertex = ControlCenter::envireGraph->vertex(e.frame);
+                envire::core::GraphTraits::vertex_descriptor parentVertex = ControlCenter::graphTreeView->tree[vertex].parent;
+                envire::core::FrameId parentFrame = ControlCenter::envireGraph->getFrameId(parentVertex);
+                LOG_INFO("parent Frame: %s", parentFrame.c_str());
+
+                ConfigMap config = e.item->getData().getFullConfigMap();
+                config["parentFrame"] = parentFrame;
+                // config["name"]
+                // config["mass"]
+                // ------------------------------
+                // TODO: this is a conversion to old mars config
+                // should be replaced in physics
+                config["inertia"]["i00"] = config["xx"];
+                config["inertia"]["i01"] = config["xy"];
+                config["inertia"]["i02"] = config["xz"];
+                config["inertia"]["i10"] = config["xy"];
+                config["inertia"]["i11"] = config["yy"];
+                config["inertia"]["i12"] = config["yz"];
+                config["inertia"]["i20"] = config["xz"];
+                config["inertia"]["i21"] = config["yz"];
+                config["inertia"]["i22"] = config["zz"];
+                config["type"] = "inertial";      // should be inertia according to the base_type::Inertia
+                // --------------------------------
+                // todo: check hirarchy issues with closed loops
+                envire::core::Transform t = ControlCenter::envireGraph->getTransform(parentVertex, vertex);
+                vectorToConfigItem(&(config["position"]), &(t.transform.translation));
+                quaternionToConfigItem(&(config["orientation"]), &(t.transform.orientation));
+                std::cout << "CONFIG " << config.toJsonString() << std::endl;
                 control->physics->createObject(config);
             }
         }
