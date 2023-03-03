@@ -142,6 +142,10 @@ namespace mars
                 newFrame->setRotation(t.transform.orientation);
 
                 // store DynamicObject in graph
+                // TODO: do we need to store DynamicObjectItem ?
+                // or can we store the DynamicObject directly inside the graph
+                // since DynamicObjectItem does not contain absolute pose anymore
+                // the plugin name information for physic can go to SubWorld Item
                 DynamicObjectItem item;
                 item.dynamicObject = newFrame;
                 item.pluginName = "mars_ode_physics";   // TODO: why we need to hardcode the name of the lib???
