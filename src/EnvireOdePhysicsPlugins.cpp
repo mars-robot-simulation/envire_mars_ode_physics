@@ -421,11 +421,13 @@ namespace mars
             // TODO: why we need to hardcode the name of the lib???
             if(control->physics->getLibName() == "mars_ode_physics")
             {
+                using LinkItem = envire::core::Item<::envire::base_types::Link>;
+                using LinkItemItr = envire::core::EnvireGraph::ItemIterator<LinkItem>;
+                using VertexDesc = envire::core::GraphTraits::vertex_descriptor;
+
                 // the parent link is stored in the parent frame
                 // the child link is stored in the same frame as fixed joint
-                using VertexDesc = envire::core::GraphTraits::vertex_descriptor;
                 VertexDesc vertex = ControlCenter::envireGraph->getVertex(frameId);
-
 
                 // get link from parent frame as parent link for a joint
                 VertexDesc parentVertex = ControlCenter::graphTreeView->getParent(vertex);
@@ -437,8 +439,6 @@ namespace mars
                     return;
                 }
 
-                using LinkItem = envire::core::Item<::envire::base_types::Link>;
-                using LinkItemItr = envire::core::EnvireGraph::ItemIterator<LinkItem>;
                 LinkItemItr parentLinkItemItr = ControlCenter::envireGraph->getItem<LinkItem>(parentFrameId);
                 envire::base_types::Link &parentLink = parentLinkItemItr->getData();
 
