@@ -56,8 +56,10 @@ namespace mars
             GraphItemEventDispatcher<envire::core::Item<::smurf::Frame>>::subscribe(ControlCenter::envireGraph.get());
             GraphItemEventDispatcher<envire::core::Item<::smurf::Inertial>>::subscribe(ControlCenter::envireGraph.get());
             GraphItemEventDispatcher<envire::core::Item<::smurf::Joint>>::subscribe(ControlCenter::envireGraph.get());
+
             GraphItemEventDispatcher<envire::core::Item<::envire::base_types::Link>>::subscribe(ControlCenter::envireGraph.get());
             GraphItemEventDispatcher<envire::core::Item<::envire::base_types::Inertial>>::subscribe(ControlCenter::envireGraph.get());
+
             GraphItemEventDispatcher<envire::core::Item<::envire::base_types::joints::Fixed>>::subscribe(ControlCenter::envireGraph.get());
             GraphItemEventDispatcher<envire::core::Item<::envire::base_types::joints::Revolute>>::subscribe(ControlCenter::envireGraph.get());
             GraphItemEventDispatcher<envire::core::Item<::envire::base_types::joints::Continuous>>::subscribe(ControlCenter::envireGraph.get());
@@ -82,6 +84,7 @@ namespace mars
 
          */
 
+        // TODO: this should be moved out from here
         std::shared_ptr<SubControlCenter> EnvireOdePhysicsPlugins::getControlCenter(envire::core::FrameId frame)
         {
             // search for physics interface in graph
@@ -203,7 +206,6 @@ namespace mars
                 envire::core::Transform t = ControlCenter::envireGraph->getTransform(parentVertex, vertex);
                 vectorToConfigItem(&(config["position"]), &(t.transform.translation));
                 quaternionToConfigItem(&(config["orientation"]), &(t.transform.orientation));
-                std::cout << "CONFIG " << config.toJsonString() << std::endl;
                 control->physics->createObject(config);
             }
         }
@@ -489,8 +491,6 @@ namespace mars
                 // reduce DataBroker load
                 config["reducedDataPackage"] = true;
 
-                std::cout << config.toJsonString() << std::endl;
-
                 std::shared_ptr<JointInterface> jInterface = control->physics->createJoint(ControlCenter::theDataBroker, config);
                 // store JointInterface in graph
                 JointInterfaceItem item;
@@ -499,7 +499,6 @@ namespace mars
                 ControlCenter::envireGraph->addItemToFrame(frameId, jointItemPtr);
             }
         }
-
     } // end of namespace envire_ode_physics
 
 } // end of namespace mars
