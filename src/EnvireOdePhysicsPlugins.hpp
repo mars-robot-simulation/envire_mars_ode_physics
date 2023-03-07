@@ -84,7 +84,9 @@ namespace mars
         private:
             std::shared_ptr<interfaces::SubControlCenter> getControlCenter(envire::core::FrameId frame);
 
-            void createJoint(configmaps::ConfigMap &config, const envire::core::FrameId &frameId);
+            void setLinksFixedJoint(configmaps::ConfigMap &config, const envire::core::FrameId &frameId);
+            void setLinksDynamicJoint(configmaps::ConfigMap &config, const envire::core::FrameId &frameId);
+            void createPhysicJoint(configmaps::ConfigMap &config, const envire::core::FrameId &frameId);
             bool containsOneLink(const envire::core::FrameId &frameId);
         };
 

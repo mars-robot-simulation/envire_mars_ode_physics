@@ -365,7 +365,10 @@ namespace mars
             envire::base_types::joints::Fixed &joint = e.item->getData();
             ConfigMap config = joint.getFullConfigMap();
 
-            createJoint(config, e.frame);
+            // find the parent and child links that are connected by the joint
+            setLinksFixedJoint(config, e.frame);
+            // create joint in physic
+            createPhysicJoint(config, e.frame);
         }
 
         void EnvireOdePhysicsPlugins::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::joints::Revolute>>& e)
@@ -379,7 +382,10 @@ namespace mars
             // TODO: change the type in mars to revolute in urdf loader
             config["type"] = "hinge";
 
-            createJoint(config, e.frame);
+            // find the parent and child links that are connected by the joint
+            setLinksDynamicJoint(config, e.frame);
+            // create joint in physic
+            createPhysicJoint(config, e.frame);
         }
 
         void EnvireOdePhysicsPlugins::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::joints::Continuous>>& e)
@@ -392,43 +398,59 @@ namespace mars
             // TODO: change the type in mars to revolute in urdf loader
             config["type"] = "hinge";
 
-            createJoint(config, e.frame);
+            // find the parent and child links that are connected by the joint
+            setLinksDynamicJoint(config, e.frame);
+            // create joint in physic
+            createPhysicJoint(config, e.frame);
         }
 
-        bool EnvireOdePhysicsPlugins::containsOneLink(const envire::core::FrameId &frameId)
+        void EnvireOdePhysicsPlugins::setLinksFixedJoint(configmaps::ConfigMap &config, const envire::core::FrameId &frameId)
         {
-            // check if there is only one link item in the parent frame
-            size_t linkNumb = ControlCenter::envireGraph->getItemCount<envire::core::Item<::envire::base_types::Link>>(frameId);
-            if (linkNumb == 0)
-            {
-                LOG_ERROR_S << "The frame " << frameId << " does not contain a link item.";
-                return false;
-            } else if (linkNumb > 1)
-            {
-                LOG_ERROR_S << "There are multiple link items in the frame " << frameId << ".";
-                return false;
-            }
+            using LinkItem = envire::core::Item<::envire::base_types::Link>;
+            using LinkItemItr = envire::core::EnvireGraph::ItemIterator<LinkItem>;
+            using VertexDesc = envire::core::GraphTraits::vertex_descriptor;
 
-            return true;
-        }
+            // the parent link is stored in the parent frame
+            // the child link is stored in the same frame as fixed joint
+            VertexDesc vertex = ControlCenter::envireGraph->getVertex(frameId);
 
-        void EnvireOdePhysicsPlugins::createJoint(configmaps::ConfigMap &config, const envire::core::FrameId &frameId) {
-            std::shared_ptr<SubControlCenter> control = getControlCenter(frameId);
-            if(!control)
+            // get link from parent frame as parent link for a joint
+            VertexDesc parentVertex = ControlCenter::graphTreeView->getParent(vertex);
+            envire::core::FrameId parentFrameId = ControlCenter::envireGraph->getFrameId(parentVertex);
+
+            if (containsOneLink(parentFrameId) == false)
             {
-                LOG_ERROR_S << "EnvireOdePhysicsPlugins::itemAdded: no control found!";
+                LOG_ERROR_S << "Can not create a new joint";
                 return;
             }
 
-            // TODO: why we need to hardcode the name of the lib???
-            if(control->physics->getLibName() == "mars_ode_physics")
+            LinkItemItr parentLinkItemItr = ControlCenter::envireGraph->getItem<LinkItem>(parentFrameId);
+            envire::base_types::Link &parentLink = parentLinkItemItr->getData();
+
+            // get link from the same frame as child link for a joint
+            envire::core::FrameId childFrameId = frameId;
+
+            if (containsOneLink(childFrameId) == false)
             {
+                LOG_ERROR_S << "Can not create a new joint";
+                return;
+            }
+            LinkItemItr childLinkItemItr = ControlCenter::envireGraph->getItem<LinkItem>(childFrameId);
+            envire::base_types::Link &childLink = childLinkItemItr->getData();
+
+            // set connected links
+            config["parent_link_name"] = parentLink.name;
+            config["child_link_name"] = childLink.name;
+        }
+
+        void EnvireOdePhysicsPlugins::setLinksDynamicJoint(configmaps::ConfigMap &config, const envire::core::FrameId &frameId)
+        {
                 using LinkItem = envire::core::Item<::envire::base_types::Link>;
                 using LinkItemItr = envire::core::EnvireGraph::ItemIterator<LinkItem>;
                 using VertexDesc = envire::core::GraphTraits::vertex_descriptor;
 
                 // the parent link is stored in the parent frame
-                // the child link is stored in the same frame as fixed joint
+                // the child link is stored in the child frame as fixed joint
                 VertexDesc vertex = ControlCenter::envireGraph->getVertex(frameId);
 
                 // get link from parent frame as parent link for a joint
@@ -472,6 +494,19 @@ namespace mars
                 // set connected links
                 config["parent_link_name"] = parentLink.name;
                 config["child_link_name"] = childLink.name;
+        }
+
+        void EnvireOdePhysicsPlugins::createPhysicJoint(configmaps::ConfigMap &config, const envire::core::FrameId &frameId)
+        {
+            std::shared_ptr<SubControlCenter> control = getControlCenter(frameId);
+            if(!control)
+            {
+                LOG_ERROR_S << "EnvireOdePhysicsPlugins::itemAdded: no control found!";
+                return;
+            }
+            // TODO: why we need to hardcode the name of the lib???
+            if(control->physics->getLibName() == "mars_ode_physics")
+            {
 
                 // set absolute position of joint
                 envire::core::Transform trans = ControlCenter::envireGraph->getTransform(SIM_CENTER_FRAME_NAME, frameId);
@@ -498,6 +533,23 @@ namespace mars
                 envire::core::Item<JointInterfaceItem>::Ptr jointItemPtr(new envire::core::Item<JointInterfaceItem>(item));
                 ControlCenter::envireGraph->addItemToFrame(frameId, jointItemPtr);
             }
+        }
+
+        bool EnvireOdePhysicsPlugins::containsOneLink(const envire::core::FrameId &frameId)
+        {
+            // check if there is only one link item in the parent frame
+            size_t linkNumb = ControlCenter::envireGraph->getItemCount<envire::core::Item<::envire::base_types::Link>>(frameId);
+            if (linkNumb == 0)
+            {
+                LOG_ERROR_S << "The frame " << frameId << " does not contain a link item.";
+                return false;
+            } else if (linkNumb > 1)
+            {
+                LOG_ERROR_S << "There are multiple link items in the frame " << frameId << ".";
+                return false;
+            }
+
+            return true;
         }
     } // end of namespace envire_ode_physics
 
