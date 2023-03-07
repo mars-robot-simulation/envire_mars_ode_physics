@@ -58,6 +58,9 @@ namespace mars
             GraphItemEventDispatcher<envire::core::Item<::smurf::Joint>>::subscribe(ControlCenter::envireGraph.get());
             GraphItemEventDispatcher<envire::core::Item<::envire::base_types::Link>>::subscribe(ControlCenter::envireGraph.get());
             GraphItemEventDispatcher<envire::core::Item<::envire::base_types::Inertial>>::subscribe(ControlCenter::envireGraph.get());
+            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::joints::Fixed>>::subscribe(ControlCenter::envireGraph.get());
+            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::joints::Revolute>>::subscribe(ControlCenter::envireGraph.get());
+            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::joints::Continuous>>::subscribe(ControlCenter::envireGraph.get());
         }
 
         EnvireOdePhysicsPlugins::~EnvireOdePhysicsPlugins()
@@ -349,6 +352,151 @@ namespace mars
                 vectorToConfigItem(&(config["position"]), &(t.transform.translation));
                 quaternionToConfigItem(&(config["orientation"]), &(t.transform.orientation));
                 control->physics->createObject(config);
+            }
+        }
+
+        void EnvireOdePhysicsPlugins::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::joints::Fixed>>& e)
+        {
+            LOG_DEBUG_S << "OdePhysicsPlugin: Added envire::base_types::joints::Fixed item: " << e.frame;
+            LOG_DEBUG_S << "joint name: " << e.item->getData().name;
+
+            envire::base_types::joints::Fixed &joint = e.item->getData();
+            ConfigMap config = joint.getFullConfigMap();
+
+            createJoint(config, e.frame);
+        }
+
+        void EnvireOdePhysicsPlugins::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::joints::Revolute>>& e)
+        {
+
+            LOG_DEBUG_S << "OdePhysicsPlugin: Added envire::base_types::joints::Revolute item: " << e.frame;
+            LOG_DEBUG_S << "joint name: " << e.item->getData().name;
+
+            envire::base_types::joints::Revolute &joint = e.item->getData();
+            ConfigMap config = joint.getFullConfigMap();
+            // TODO: change the type in mars to revolute in urdf loader
+            config["type"] = "hinge";
+
+            createJoint(config, e.frame);
+        }
+
+        void EnvireOdePhysicsPlugins::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::joints::Continuous>>& e)
+        {
+            LOG_DEBUG_S << "OdePhysicsPlugin: Added envire::base_types::joints::Continuous item: " << e.frame;
+            LOG_DEBUG_S << "joint name: " << e.item->getData().name;
+
+            envire::base_types::joints::Continuous &joint = e.item->getData();
+            ConfigMap config = joint.getFullConfigMap();
+            // TODO: change the type in mars to revolute in urdf loader
+            config["type"] = "hinge";
+
+            createJoint(config, e.frame);
+        }
+
+        bool EnvireOdePhysicsPlugins::containsOneLink(const envire::core::FrameId &frameId)
+        {
+            // check if there is only one link item in the parent frame
+            size_t linkNumb = ControlCenter::envireGraph->getItemCount<envire::core::Item<::envire::base_types::Link>>(frameId);
+            if (linkNumb == 0)
+            {
+                LOG_ERROR_S << "The frame " << frameId << " does not contain a link item.";
+                return false;
+            } else if (linkNumb > 1)
+            {
+                LOG_ERROR_S << "There are multiple link items in the frame " << frameId << ".";
+                return false;
+            }
+
+            return true;
+        }
+
+        void EnvireOdePhysicsPlugins::createJoint(configmaps::ConfigMap &config, const envire::core::FrameId &frameId) {
+            std::shared_ptr<SubControlCenter> control = getControlCenter(frameId);
+            if(!control)
+            {
+                LOG_ERROR_S << "EnvireOdePhysicsPlugins::itemAdded: no control found!";
+                return;
+            }
+
+            // TODO: why we need to hardcode the name of the lib???
+            if(control->physics->getLibName() == "mars_ode_physics")
+            {
+                // the parent link is stored in the parent frame
+                // the child link is stored in the same frame as fixed joint
+                using VertexDesc = envire::core::GraphTraits::vertex_descriptor;
+                VertexDesc vertex = ControlCenter::envireGraph->getVertex(frameId);
+
+
+                // get link from parent frame as parent link for a joint
+                VertexDesc parentVertex = ControlCenter::graphTreeView->getParent(vertex);
+                envire::core::FrameId parentFrameId = ControlCenter::envireGraph->getFrameId(parentVertex);
+
+                if (containsOneLink(parentFrameId) == false)
+                {
+                    LOG_ERROR_S << "Can not create a new joint";
+                    return;
+                }
+
+                using LinkItem = envire::core::Item<::envire::base_types::Link>;
+                using LinkItemItr = envire::core::EnvireGraph::ItemIterator<LinkItem>;
+                LinkItemItr parentLinkItemItr = ControlCenter::envireGraph->getItem<LinkItem>(parentFrameId);
+                envire::base_types::Link &parentLink = parentLinkItemItr->getData();
+
+                // get link from child frame as child link for a joint
+                // there should be only one child frame, which is connected to joint frame
+                const std::unordered_set<VertexDesc>& children = ControlCenter::graphTreeView->tree[vertex].children;
+                if (children.size() == 0)
+                {
+                    LOG_ERROR_S << "Can not create a new joint, since the frame " << frameId << " contains no child frame.";
+                    return;
+                } else if (children.size() > 1)
+                {
+                    LOG_ERROR_S << "Can not create a new joint, since the frame " << frameId << " contains several child frames.";
+                    return;
+                }
+
+                auto itr = children.begin();
+                VertexDesc childVertex = *(itr);
+                envire::core::FrameId childFrameId = ControlCenter::envireGraph->getFrameId(childVertex);
+
+                if (containsOneLink(childFrameId) == false)
+                {
+                    LOG_ERROR_S << "Can not create a new joint";
+                    return;
+                }
+                LinkItemItr childLinkItemItr = ControlCenter::envireGraph->getItem<LinkItem>(childFrameId);
+                envire::base_types::Link &childLink = childLinkItemItr->getData();
+
+                // set connected links
+                config["parent_link_name"] = parentLink.name;
+                config["child_link_name"] = childLink.name;
+
+                // set absolute position of joint
+                envire::core::Transform trans = ControlCenter::envireGraph->getTransform(SIM_CENTER_FRAME_NAME, frameId);
+                Vector anchor = trans.transform.translation;
+                config["anchor"]["x"] = anchor.x();
+                config["anchor"]["y"] = anchor.y();
+                config["anchor"]["z"] = anchor.z();
+
+                // set absolute orientation of axis
+                Vector axis(config["axis"]["x"], config["axis"]["y"], config["axis"]["z"]);
+                axis = trans.transform.orientation*axis;
+                // todo: add assumption that joint axis is defined in childlink coordinates?
+                config["axis1"]["x"] = axis.x();
+                config["axis1"]["y"] = axis.y();
+                config["axis1"]["z"] = axis.z();
+
+                // reduce DataBroker load
+                config["reducedDataPackage"] = true;
+
+                std::cout << config.toJsonString() << std::endl;
+
+                std::shared_ptr<JointInterface> jInterface = control->physics->createJoint(ControlCenter::theDataBroker, config);
+                // store JointInterface in graph
+                JointInterfaceItem item;
+                item.jointInterface = jInterface;
+                envire::core::Item<JointInterfaceItem>::Ptr jointItemPtr(new envire::core::Item<JointInterfaceItem>(item));
+                ControlCenter::envireGraph->addItemToFrame(frameId, jointItemPtr);
             }
         }
 

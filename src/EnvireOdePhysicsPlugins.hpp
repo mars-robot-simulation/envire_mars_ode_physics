@@ -22,6 +22,11 @@
 
 #include <envire_base_types/Link.hpp>
 #include <envire_base_types/Inertial.hpp>
+#include <envire_base_types/joints/Fixed.hpp>
+#include <envire_base_types/joints/Revolute.hpp>
+#include <envire_base_types/joints/Continuous.hpp>
+
+//TODO: add prismatic joint into base types and here
 
 namespace mars
 {
@@ -32,14 +37,18 @@ namespace mars
 
     namespace envire_ode_physics
     {
-
+        // move the typedef to separate file
         class EnvireOdePhysicsPlugins : public lib_manager::LibInterface,
                                         public envire::core::GraphEventDispatcher,
                                         public envire::core::GraphItemEventDispatcher<envire::core::Item<::smurf::Frame>>,
                                         public envire::core::GraphItemEventDispatcher<envire::core::Item<::smurf::Inertial>>,
                                         public envire::core::GraphItemEventDispatcher<envire::core::Item<::smurf::Joint>>,
                                         public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::Link>>,
-                                        public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::Inertial>>
+                                        public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::Inertial>>,
+                                        public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::joints::Fixed>>,
+                                        public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::joints::Revolute>>,
+                                        public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::joints::Continuous>>
+
         {
 
         public:
@@ -66,9 +75,16 @@ namespace mars
             virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::smurf::Joint>>& e) override;
             virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::Link>>& e) override;
             virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::Inertial>>& e) override;
+            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::joints::Fixed>>& e) override;
+            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::joints::Revolute>>& e) override;
+            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::joints::Continuous>>& e) override;
 
         private:
             std::shared_ptr<interfaces::SubControlCenter> getControlCenter(envire::core::FrameId frame);
+
+            bool containsOneLink(const envire::core::FrameId &frameId);
+
+            void createJoint(configmaps::ConfigMap &config, const envire::core::FrameId &frameId);
         };
 
     } // end of namespace envire_ode_physics
