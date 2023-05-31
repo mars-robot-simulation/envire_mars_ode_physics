@@ -25,6 +25,7 @@
 #include <envire_base_types/joints/Fixed.hpp>
 #include <envire_base_types/joints/Revolute.hpp>
 #include <envire_base_types/joints/Continuous.hpp>
+#include <envire_base_types/joints/Prismatic.hpp>
 
 //TODO: add prismatic joint into base types and here
 
@@ -47,7 +48,8 @@ namespace mars
                                         public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::Inertial>>,
                                         public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::joints::Fixed>>,
                                         public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::joints::Revolute>>,
-                                        public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::joints::Continuous>>
+                                        public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::joints::Continuous>>,
+                                        public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::joints::Prismatic>>
 
         {
 
@@ -80,6 +82,7 @@ namespace mars
             virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::joints::Fixed>>& e) override;
             virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::joints::Revolute>>& e) override;
             virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::joints::Continuous>>& e) override;
+            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::joints::Prismatic>>& e) override;
 
         private:
             std::shared_ptr<interfaces::SubControlCenter> getControlCenter(envire::core::FrameId frame);

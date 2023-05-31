@@ -63,6 +63,7 @@ namespace mars
             GraphItemEventDispatcher<envire::core::Item<::envire::base_types::joints::Fixed>>::subscribe(ControlCenter::envireGraph.get());
             GraphItemEventDispatcher<envire::core::Item<::envire::base_types::joints::Revolute>>::subscribe(ControlCenter::envireGraph.get());
             GraphItemEventDispatcher<envire::core::Item<::envire::base_types::joints::Continuous>>::subscribe(ControlCenter::envireGraph.get());
+            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::joints::Prismatic>>::subscribe(ControlCenter::envireGraph.get());
         }
 
         EnvireOdePhysicsPlugins::~EnvireOdePhysicsPlugins()
@@ -178,7 +179,7 @@ namespace mars
             // TODO: why we need to hardcode the name of the lib???
             if(control->physics->getLibName() == "mars_ode_physics")
             {
-                LOG_INFO("OdePhysicsPlugin: Added smurf::Inertial item: %s", e.frame.c_str());
+                LOG_WARN("OdePhysicsPlugin: Added smurf::Inertial item: %s", e.frame.c_str());
                 // todo: check that we really have the frame in the map
                 const envire::core::GraphTraits::vertex_descriptor vertex = ControlCenter::envireGraph->vertex(e.frame);
                 envire::core::GraphTraits::vertex_descriptor parentVertex = ControlCenter::graphTreeView->tree[vertex].parent;
@@ -220,7 +221,7 @@ namespace mars
             // TODO: why we need to hardcode the name of the lib???
             if(control->physics->getLibName() == "mars_ode_physics")
             {
-                LOG_DEBUG("OdePhysicsPlugin: Added smurf::joint item: %s", e.frame.c_str());
+                LOG_WARN("OdePhysicsPlugin: Added smurf::joint item: %s", e.frame.c_str());
                 LOG_DEBUG("\t %s", e.item->getData().getName().c_str());
                 urdf::JointSharedPtr joint = e.item->getData().getJointModel();
 
@@ -248,7 +249,7 @@ namespace mars
                     config["type"] = "hinge";
                 } else if (joint->type == urdf::Joint::PRISMATIC)
                 {
-                    config["type"] = "slider";
+                    config["type"] = "prismatic";
                 } else if (joint->type == urdf::Joint::FIXED)
                 {
                     config["type"] = "fixed";
@@ -325,7 +326,7 @@ namespace mars
             // TODO: why we need to hardcode the name of the lib???
             if(control->physics->getLibName() == "mars_ode_physics")
             {
-                LOG_INFO("OdePhysicsPlugin: Added envire::base_types::Inertia item: %s", e.frame.c_str());
+                LOG_WARN("OdePhysicsPlugin: Added envire::base_types::Inertia item: %s", e.frame.c_str());
                 // todo: check that we really have the frame in the map
                 const envire::core::GraphTraits::vertex_descriptor vertex = ControlCenter::envireGraph->vertex(e.frame);
                 envire::core::GraphTraits::vertex_descriptor parentVertex = ControlCenter::graphTreeView->tree[vertex].parent;
@@ -359,6 +360,7 @@ namespace mars
 
         void EnvireOdePhysicsPlugins::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::joints::Fixed>>& e)
         {
+            LOG_WARN("OdePhysicsPlugin: Added envire::base_types::joints::Fixed item: %s", e.frame.c_str());
             LOG_DEBUG_S << "OdePhysicsPlugin: Added envire::base_types::joints::Fixed item: " << e.frame;
             LOG_DEBUG_S << "joint name: " << e.item->getData().name;
 
@@ -374,6 +376,7 @@ namespace mars
         void EnvireOdePhysicsPlugins::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::joints::Revolute>>& e)
         {
 
+            LOG_WARN("OdePhysicsPlugin: Added envire::base_types::joints::Revolute item: %s", e.frame.c_str());
             LOG_DEBUG_S << "OdePhysicsPlugin: Added envire::base_types::joints::Revolute item: " << e.frame;
             LOG_DEBUG_S << "joint name: " << e.item->getData().name;
 
@@ -390,6 +393,7 @@ namespace mars
 
         void EnvireOdePhysicsPlugins::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::joints::Continuous>>& e)
         {
+            LOG_WARN("OdePhysicsPlugin: Added envire::base_types::joints::Continuous item: %s", e.frame.c_str());
             LOG_DEBUG_S << "OdePhysicsPlugin: Added envire::base_types::joints::Continuous item: " << e.frame;
             LOG_DEBUG_S << "joint name: " << e.item->getData().name;
 
@@ -397,6 +401,24 @@ namespace mars
             ConfigMap config = joint.getFullConfigMap();
             // TODO: change the type in mars to revolute in urdf loader
             config["type"] = "hinge";
+
+            // find the parent and child links that are connected by the joint
+            setLinksDynamicJoint(config, e.frame);
+            // create joint in physic
+            createPhysicJoint(config, e.frame);
+        }
+
+        void EnvireOdePhysicsPlugins::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::joints::Prismatic>>& e)
+        {
+
+            LOG_WARN("OdePhysicsPlugin: Added envire::base_types::joints::Prismatic item: %s", e.frame.c_str());
+            LOG_DEBUG_S << "OdePhysicsPlugin: Added envire::base_types::joints::Prismatic item: " << e.frame;
+            LOG_DEBUG_S << "joint name: " << e.item->getData().name;
+
+            envire::base_types::joints::Prismatic &joint = e.item->getData();
+            ConfigMap config = joint.getFullConfigMap();
+            // TODO: change the type in mars to revolute in urdf loader
+            config["type"] = "prismatic";
 
             // find the parent and child links that are connected by the joint
             setLinksDynamicJoint(config, e.frame);
