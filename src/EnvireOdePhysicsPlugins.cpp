@@ -13,9 +13,6 @@
  *   - braces start in new line
  *   - indent with four tabs
  */
-
-#include <smurf/Robot.hpp>
-
 #include "EnvireOdePhysicsPlugins.hpp"
 
 //#include "PhysicsMapper.h"
@@ -53,9 +50,6 @@ namespace mars
             lib_manager::LibInterface(theManager)
         {
             //GraphEventDispatcher::subscribe(ControlCenter::envireGraph.get());
-            GraphItemEventDispatcher<envire::core::Item<::smurf::Frame>>::subscribe(ControlCenter::envireGraph.get());
-            GraphItemEventDispatcher<envire::core::Item<::smurf::Inertial>>::subscribe(ControlCenter::envireGraph.get());
-            GraphItemEventDispatcher<envire::core::Item<::smurf::Joint>>::subscribe(ControlCenter::envireGraph.get());
 
             GraphItemEventDispatcher<envire::core::Item<::envire::base_types::Link>>::subscribe(ControlCenter::envireGraph.get());
             GraphItemEventDispatcher<envire::core::Item<::envire::base_types::Inertial>>::subscribe(ControlCenter::envireGraph.get());
@@ -123,165 +117,10 @@ namespace mars
             LOG_DEBUG("\tclassName: %s", e.item->getClassName().c_str());
         }
 
-        void EnvireOdePhysicsPlugins::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::smurf::Frame>>& e)
-        {
-            std::shared_ptr<SubControlCenter> control = getControlCenter(e.frame);
-
-            // todo: else search the tree upwards for a PhysicsInterface
-            if(!control)
-            {
-                LOG_ERROR("EnvireOdePhysicsPlugins::itemAdded: no control found!");
-            }
-            // TODO: why we need to hardcode the name of the lib???
-            if(control->physics->getLibName() == "mars_ode_physics")
-            {
-                LOG_WARN("OdePhysicsPlugin: Added smurf::Frame item: %s", e.frame.c_str());
-                LOG_DEBUG("\t %s", e.item->getData().getName().c_str());
-                //e.item->getData() // provides the smurf joint class shared pointer
-                ConfigMap config;
-                config["name"] = e.frame;
-                // we are responsible
-                std::shared_ptr<DynamicObject> newFrame = control->physics->createFrame(ControlCenter::theDataBroker, config);
-
-                // todo: set pose
-                envire::core::Transform t = ControlCenter::envireGraph->getTransform(SIM_CENTER_FRAME_NAME, e.frame);
-                newFrame->setPosition(t.transform.translation);
-                newFrame->setRotation(t.transform.orientation);
-
-                // store DynamicObject in graph
-                // TODO: do we need to store DynamicObjectItem ?
-                // or can we store the DynamicObject directly inside the graph
-                // since DynamicObjectItem does not contain absolute pose anymore
-                // the plugin name information for physic can go to SubWorld Item
-                DynamicObjectItem item;
-                item.dynamicObject = newFrame;
-                item.pluginName = "mars_ode_physics";   // TODO: why we need to hardcode the name of the lib???
-                envire::core::Item<DynamicObjectItem>::Ptr objectItemPtr(new envire::core::Item<DynamicObjectItem>(item));
-                //envire::core::Item<DynamicObject*>::Ptr objectItemPtr(new envire::core::Item<DynamicObject*>(newFrame));
-                ControlCenter::envireGraph->addItemToFrame(e.frame, objectItemPtr);
-            }
-        }
-
-
         // std::string EnvireOdePhysicsPlugins::getRootFrame()
         // {
         //     return std::string(SIM_CENTER_FRAME_NAME);
         // }
-
-
-        void EnvireOdePhysicsPlugins::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::smurf::Inertial>>& e)
-        {
-            std::shared_ptr<SubControlCenter> control = getControlCenter(e.frame);
-            if(!control)
-            {
-                LOG_ERROR("EnvireOdePhysicsPlugins::itemAdded: no control found!");
-            }
-            // TODO: why we need to hardcode the name of the lib???
-            if(control->physics->getLibName() == "mars_ode_physics")
-            {
-                LOG_WARN("OdePhysicsPlugin: Added smurf::Inertial item: %s", e.frame.c_str());
-                // todo: check that we really have the frame in the map
-                const envire::core::GraphTraits::vertex_descriptor vertex = ControlCenter::envireGraph->vertex(e.frame);
-                envire::core::GraphTraits::vertex_descriptor parentVertex = ControlCenter::graphTreeView->tree[vertex].parent;
-                envire::core::FrameId parentFrame = ControlCenter::envireGraph->getFrameId(parentVertex);
-                LOG_INFO("parent Frame: %s", parentFrame.c_str());
-                //std::string type = e.item->getData().getTypeString();
-                std::string type = "inertial";
-                LOG_DEBUG("\t\ttype: %s", type.c_str());
-
-                ConfigMap config;
-                config["name"] = e.item->getData().getName();
-                config["parentFrame"] = parentFrame;
-                config["inertia"]["i00"] = e.item->getData().getUrdfInertial().ixx;
-                config["inertia"]["i01"] = e.item->getData().getUrdfInertial().ixy;
-                config["inertia"]["i02"] = e.item->getData().getUrdfInertial().ixz;
-                config["inertia"]["i10"] = e.item->getData().getUrdfInertial().ixy;
-                config["inertia"]["i11"] = e.item->getData().getUrdfInertial().iyy;
-                config["inertia"]["i12"] = e.item->getData().getUrdfInertial().iyz;
-                config["inertia"]["i20"] = e.item->getData().getUrdfInertial().ixz;
-                config["inertia"]["i21"] = e.item->getData().getUrdfInertial().iyz;
-                config["inertia"]["i22"] = e.item->getData().getUrdfInertial().izz;
-                config["mass"] = e.item->getData().getUrdfInertial().mass;
-                config["type"] = type;
-                // todo: check hirarchy issues with closed loops
-                envire::core::Transform t = ControlCenter::envireGraph->getTransform(parentVertex, vertex);
-                vectorToConfigItem(&(config["position"]), &(t.transform.translation));
-                quaternionToConfigItem(&(config["orientation"]), &(t.transform.orientation));
-                control->physics->createObject(config);
-            }
-        }
-
-        void EnvireOdePhysicsPlugins::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::smurf::Joint>>& e)
-        {
-            std::shared_ptr<SubControlCenter> control = getControlCenter(e.frame);
-            if(!control)
-            {
-                LOG_ERROR("EnvireOdePhysicsPlugins::itemAdded: no control found!");
-            }
-            // TODO: why we need to hardcode the name of the lib???
-            if(control->physics->getLibName() == "mars_ode_physics")
-            {
-                LOG_WARN("OdePhysicsPlugin: Added smurf::joint item: %s", e.frame.c_str());
-                LOG_DEBUG("\t %s", e.item->getData().getName().c_str());
-                urdf::JointSharedPtr joint = e.item->getData().getJointModel();
-
-                ConfigMap config;
-                // todo: prefix have to move to joint strings directly
-                config["name"] = control->getPrefix() + joint->name;
-                config["parent_link_name"] = control->getPrefix() + joint->parent_link_name;
-                config["child_link_name"] = control->getPrefix() + joint->child_link_name;
-                // deprecated: config["anchorpos"] = "node2"; // always use the child_link as the anchor since joint and child_link are in the same frame
-                envire::core::Transform t = ControlCenter::envireGraph->getTransform(SIM_CENTER_FRAME_NAME, e.frame);
-                Vector p = t.transform.translation;
-                const Eigen::Affine3d &transform = e.item->getData().getParentToJointOrigin();
-                p += t.transform.orientation*transform.translation();
-                Vector a(joint->axis.x, joint->axis.y, joint->axis.z);
-                a = t.transform.orientation*transform.rotation()*a;
-                config["anchor"]["x"] = p.x();
-                config["anchor"]["y"] = p.y();
-                config["anchor"]["z"] = p.z();
-
-                // FIXME: we do not at this point read the joint "maxeffort" and "maxvelocity"
-                // limits as they are effectively motor values and should be used only
-                // if there are no explicit motor values defined
-                if (joint->type == urdf::Joint::REVOLUTE || joint->type == urdf::Joint::CONTINUOUS)
-                {
-                    config["type"] = "hinge";
-                } else if (joint->type == urdf::Joint::PRISMATIC)
-                {
-                    config["type"] = "prismatic";
-                } else if (joint->type == urdf::Joint::FIXED)
-                {
-                    config["type"] = "fixed";
-                    LOG_ERROR("Add fixed joint");
-                } else {
-                    // we don't support the type yet and use a fixed joint
-                    config["type"] = "fixed";
-                    LOG_ERROR("Add fixed joint");
-                }
-
-//         // transform the joint's axis into global coordinates
-//         urdf::Pose pose = getGlobalPose(childlink);
-//         urdf::Pose axispose;
-// //        axispose.position = childlink->parent_joint->parent_to_joint_origin_transform.rotation * joint->axis;
-//         axispose.position = pose.rotation * joint->axis;
-//         Vector v;
-//         v = Vector(axispose.position.x, axispose.position.y, axispose.position.z);
-                // todo: add assumption that joint axis is defined in childlink coordinates?
-                config["axis1"]["x"] = a.x();
-                config["axis1"]["y"] = a.y();
-                config["axis1"]["z"] = a.z();
-
-                // reduce DataBroker load
-                config["reducedDataPackage"] = true;
-                std::shared_ptr<JointInterface> jInterface = control->physics->createJoint(ControlCenter::theDataBroker, config);
-                // store JointInterface in graph
-                JointInterfaceItem item;
-                item.jointInterface = jInterface;
-                envire::core::Item<JointInterfaceItem>::Ptr jointItemPtr(new envire::core::Item<JointInterfaceItem>(item));
-                ControlCenter::envireGraph->addItemToFrame(e.frame, jointItemPtr);
-            }
-        }
 
         void EnvireOdePhysicsPlugins::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::Link>>& e)
         {
