@@ -148,7 +148,7 @@ namespace mars
                 // store DynamicObject in graph
                 DynamicObjectItem item;
                 item.dynamicObject = newFrame;
-                item.pluginName = "mars_ode_physics";   // TODO: why we need to hardcode the name of the lib???
+                item.pluginName = "mars_ode_physics";   // TODO: use the lib name from control->physics->getLibName()
                 envire::core::Item<DynamicObjectItem>::Ptr objectItemPtr(new envire::core::Item<DynamicObjectItem>(item));
                 //envire::core::Item<DynamicObject*>::Ptr objectItemPtr(new envire::core::Item<DynamicObject*>(newFrame));
                 ControlCenter::envireGraph->addItemToFrame(e.frame, objectItemPtr);
