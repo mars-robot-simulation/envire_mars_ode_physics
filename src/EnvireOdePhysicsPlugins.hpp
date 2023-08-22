@@ -15,8 +15,10 @@
 #include <envire_core/graph/TreeView.hpp>
 #include <envire_core/events/GraphEventDispatcher.hpp>
 #include <envire_core/events/GraphItemEventDispatcher.hpp>
+#include <lib_manager/LibInterface.hpp>
+#include <mars_interfaces/sim/ControlCenter.h>
 
-#include <mars_ode_collision/objects/Object.hpp>
+//#include <mars_ode_collision/objects/Object.hpp>
 
 #include <iostream>
 
