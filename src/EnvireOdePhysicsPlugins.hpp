@@ -54,6 +54,9 @@ namespace mars
 
         public:
             EnvireOdePhysicsPlugins(lib_manager::LibManager *theManager); ///< Constructor of the \c class Simulator.
+            EnvireOdePhysicsPlugins(lib_manager::LibManager *theManager,
+                                    std::shared_ptr<envire::core::EnvireGraph> envireGraph,
+                                    std::shared_ptr<envire::core::TreeView> graphTreeView);
             virtual ~EnvireOdePhysicsPlugins();
 
             // --- LibInterface ---
@@ -69,6 +72,8 @@ namespace mars
 
             CREATE_MODULE_INFO();
 
+            void init(void);
+
             // envire callbacks
             virtual void itemAdded(const envire::core::ItemAddedEvent& e) override;
 
@@ -81,6 +86,9 @@ namespace mars
             virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::joints::Prismatic>>& e) override;
 
         private:
+            std::shared_ptr<envire::core::EnvireGraph> envireGraph;
+            std::shared_ptr<envire::core::TreeView> graphTreeView;
+
             std::shared_ptr<interfaces::SubControlCenter> getControlCenter(envire::core::FrameId frame);
 
             void setLinksFixedJoint(configmaps::ConfigMap &config, const envire::core::FrameId &frameId);
