@@ -51,13 +51,15 @@ namespace mars
         {
             envireGraph = ControlCenter::envireGraph;
             graphTreeView = ControlCenter::graphTreeView;
+            dataBroker = ControlCenter::theDataBroker;
             init();
         }
 
         EnvireOdePhysicsPlugins::EnvireOdePhysicsPlugins(lib_manager::LibManager *theManager,
                                                          std::shared_ptr<envire::core::EnvireGraph> envireGraph,
-                                                         std::shared_ptr<envire::core::TreeView> graphTreeView) :
-            lib_manager::LibInterface(theManager), envireGraph(envireGraph), graphTreeView(graphTreeView)
+                                                         std::shared_ptr<envire::core::TreeView> graphTreeView,
+                                                         data_broker::DataBrokerInterface *dataBroker) :
+            lib_manager::LibInterface(theManager), envireGraph(envireGraph), graphTreeView(graphTreeView), dataBroker(dataBroker)
         {
             init();
         }
@@ -152,7 +154,7 @@ namespace mars
                 LOG_DEBUG("\t %s", e.item->getData().name.c_str());
                 ConfigMap config = e.item->getData().getFullConfigMap();
                 // we are responsible
-                std::shared_ptr<DynamicObject> newFrame = control->physics->createFrame(ControlCenter::theDataBroker, config);
+                std::shared_ptr<DynamicObject> newFrame = control->physics->createFrame(dataBroker, config);
 
                 // todo: set pose
                 envire::core::Transform t = envireGraph->getTransform(SIM_CENTER_FRAME_NAME, e.frame);
@@ -401,7 +403,7 @@ namespace mars
                 // reduce DataBroker load
                 config["reducedDataPackage"] = true;
 
-                std::shared_ptr<JointInterface> jInterface = control->physics->createJoint(ControlCenter::theDataBroker, config);
+                std::shared_ptr<JointInterface> jInterface = control->physics->createJoint(dataBroker, config);
                 // store JointInterface in graph
                 JointInterfaceItem item;
                 item.jointInterface = jInterface;

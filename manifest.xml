@@ -5,6 +5,7 @@
 	<maintainer>Malte Langosz/malte.langosz@dfki.de</maintainer>
     <!--depend package="base/types" /-->
     <depend package="simulation/lib_manager" />
+    <depend package="simulation/data_broker" />
     <depend package="simulation/mars2/mars_interfaces" />
     <depend package="simulation/mars2/mars_ode_physics" />
     <depend package="tools/configmaps" />

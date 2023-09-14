@@ -17,6 +17,7 @@
 #include <envire_core/events/GraphItemEventDispatcher.hpp>
 #include <lib_manager/LibInterface.hpp>
 #include <mars_interfaces/sim/ControlCenter.h>
+#include <data_broker/DataBrokerInterface.h>
 
 //#include <mars_ode_collision/objects/Object.hpp>
 
@@ -56,7 +57,8 @@ namespace mars
             EnvireOdePhysicsPlugins(lib_manager::LibManager *theManager); ///< Constructor of the \c class Simulator.
             EnvireOdePhysicsPlugins(lib_manager::LibManager *theManager,
                                     std::shared_ptr<envire::core::EnvireGraph> envireGraph,
-                                    std::shared_ptr<envire::core::TreeView> graphTreeView);
+                                    std::shared_ptr<envire::core::TreeView> graphTreeView,
+                                    data_broker::DataBrokerInterface *dataBroker=NULL);
             virtual ~EnvireOdePhysicsPlugins();
 
             // --- LibInterface ---
@@ -88,6 +90,7 @@ namespace mars
         private:
             std::shared_ptr<envire::core::EnvireGraph> envireGraph;
             std::shared_ptr<envire::core::TreeView> graphTreeView;
+            data_broker::DataBrokerInterface *dataBroker;
 
             std::shared_ptr<interfaces::SubControlCenter> getControlCenter(envire::core::FrameId frame);
 

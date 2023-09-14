@@ -33,6 +33,7 @@ pkg_check_modules(PKGCONFIG REQUIRED
     mars_ode_physics
     envire_core
     envire_base_types
+    data_broker
 )
 
 include_directories(${PKGCONFIG_INCLUDE_DIRS})
