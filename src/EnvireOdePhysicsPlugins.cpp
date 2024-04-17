@@ -409,6 +409,7 @@ namespace mars
                 item.jointInterface = jInterface;
                 envire::core::Item<JointInterfaceItem>::Ptr jointItemPtr(new envire::core::Item<JointInterfaceItem>(item));
                 envireGraph->addItemToFrame(frameId, jointItemPtr);
+                ControlCenter::jointIDManager->addIfUnknown(config["name"]);
             }
         }
 
