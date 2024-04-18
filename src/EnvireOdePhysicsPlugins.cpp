@@ -384,7 +384,6 @@ namespace mars
             // TODO: why we need to hardcode the name of the lib???
             if(control->physics->getLibName() == "mars_ode_physics")
             {
-
                 // set absolute position of joint
                 envire::core::Transform trans = envireGraph->getTransform(SIM_CENTER_FRAME_NAME, frameId);
                 Vector anchor = trans.transform.translation;
@@ -409,7 +408,10 @@ namespace mars
                 item.jointInterface = jInterface;
                 envire::core::Item<JointInterfaceItem>::Ptr jointItemPtr(new envire::core::Item<JointInterfaceItem>(item));
                 envireGraph->addItemToFrame(frameId, jointItemPtr);
-                ControlCenter::jointIDManager->addIfUnknown(config["name"]);
+
+                // id == 0 is invalid indicating getID that no specific id is desired
+                const unsigned long desiredId = config.hasKey("desired_id") ? config["desired_id"] : 0;
+                ControlCenter::jointIDManager->addIfUnknown(config["name"], desiredId);
             }
         }
 
