@@ -32,8 +32,8 @@
 #include <mars_ode_physics/WorldPhysicsLoader.hpp>
 
 #include <mars_interfaces/Logging.hpp>
+#include <mars_interfaces/MARSDefs.h>
 
-#define SIM_CENTER_FRAME_NAME "world"
 typedef envire::core::GraphTraits::vertex_descriptor VertexDesc;
 
 namespace mars
