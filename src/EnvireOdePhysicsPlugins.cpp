@@ -168,6 +168,7 @@ namespace mars
                 envire::core::Item<DynamicObjectItem>::Ptr objectItemPtr(new envire::core::Item<DynamicObjectItem>(item));
                 //envire::core::Item<DynamicObject*>::Ptr objectItemPtr(new envire::core::Item<DynamicObject*>(newFrame));
                 envireGraph->addItemToFrame(e.frame, objectItemPtr);
+                ControlCenter::linkIDManager->addIfUnknown(config["name"]);
             }
         }
 
