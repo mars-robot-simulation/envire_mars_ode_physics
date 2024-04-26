@@ -411,7 +411,7 @@ namespace mars
                 envireGraph->addItemToFrame(frameId, jointItemPtr);
 
                 // id == 0 is invalid indicating getID that no specific id is desired
-                const unsigned long desiredId = config.hasKey("desired_id") ? config["desired_id"] : 0;
+                const unsigned long desiredId = config.get("desired_id", 0);
                 ControlCenter::jointIDManager->addIfUnknown(config["name"], desiredId);
             }
         }
