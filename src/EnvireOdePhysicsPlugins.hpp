@@ -6,22 +6,12 @@
  */
 
 #pragma once
-#include <mars_interfaces/sim/PhysicsInterface.h>
-#include <mars_utils/Vector.h>
-
 
 #include <envire_core/items/Item.hpp>
 #include <envire_core/graph/EnvireGraph.hpp>
 #include <envire_core/graph/TreeView.hpp>
 #include <envire_core/events/GraphEventDispatcher.hpp>
 #include <envire_core/events/GraphItemEventDispatcher.hpp>
-#include <lib_manager/LibInterface.hpp>
-#include <mars_interfaces/sim/ControlCenter.h>
-#include <data_broker/DataBrokerInterface.h>
-
-//#include <mars_ode_collision/objects/Object.hpp>
-
-#include <iostream>
 
 #include <envire_base_types/Link.hpp>
 #include <envire_base_types/Inertial.hpp>
@@ -30,7 +20,15 @@
 #include <envire_base_types/joints/Continuous.hpp>
 #include <envire_base_types/joints/Prismatic.hpp>
 
+#include <lib_manager/LibInterface.hpp>
+#include <data_broker/DataBrokerInterface.h>
+
+#include <mars_interfaces/sim/ControlCenter.h>
+#include <mars_interfaces/sim/PhysicsInterface.h>
+#include <mars_utils/Vector.h>
+
 //TODO: add prismatic joint into base types and here
+
 
 namespace mars
 {
@@ -69,7 +67,7 @@ namespace mars
 
             const std::string getLibName() const override
             {
-                return std::string("envire_mars_ode_physics");
+                return std::string{"envire_mars_ode_physics"};
             }
 
             CREATE_MODULE_INFO();
@@ -97,7 +95,7 @@ namespace mars
             void setLinksFixedJoint(configmaps::ConfigMap &config, const envire::core::FrameId &frameId);
             void setLinksDynamicJoint(configmaps::ConfigMap &config, const envire::core::FrameId &frameId);
             void createPhysicJoint(configmaps::ConfigMap &config, const envire::core::FrameId &frameId);
-            bool containsOneLink(const envire::core::FrameId &frameId);
+            bool containsOneLink(const envire::core::FrameId &frameId) const;
         };
 
     } // end of namespace envire_ode_physics
