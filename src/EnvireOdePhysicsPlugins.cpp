@@ -92,8 +92,8 @@ namespace mars
             bool done = false;
             while(!done)
             {
-                const envire::core::GraphTraits::vertex_descriptor vertex = envireGraph->vertex(frame);
-                envire::core::GraphTraits::vertex_descriptor parentVertex = graphTreeView->tree[vertex].parent;
+                const auto& vertex = envireGraph->vertex(frame);
+                const auto& parentVertex = graphTreeView->tree[vertex].parent;
                 // todo: check if this check is correct
                 if(parentVertex)
                 {
@@ -101,7 +101,7 @@ namespace mars
                     try
                     {
                         using SubControlItem = envire::core::Item<std::shared_ptr<SubControlCenter>>;
-                        envire::core::EnvireGraph::ItemIterator<SubControlItem> it = envireGraph->getItem<SubControlItem>(frame);
+                        const auto& it = envireGraph->getItem<SubControlItem>(frame);
                         return it->getData();
                     }
                     catch (...)
@@ -119,13 +119,13 @@ namespace mars
         void EnvireOdePhysicsPlugins::itemAdded(const envire::core::ItemAddedEvent& e)
         {
             LOG_DEBUG("Added generic item: %s", e.frame.c_str());
-            std::string typeName{"unknown"};
+            const auto typeName = std::string{"unknown"};
             LOG_DEBUG("\tclassName: %s", e.item->getClassName().c_str());
         }
 
         void EnvireOdePhysicsPlugins::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::Link>>& e)
         {
-            std::shared_ptr<SubControlCenter> control{getControlCenter(e.frame)};
+            auto control = getControlCenter(e.frame);
 
             // TODO: else search the tree upwards for a PhysicsInterface
             if(!control)
@@ -137,12 +137,12 @@ namespace mars
             {
                 LOG_WARN("OdePhysicsPlugin: Added envire::base_types::Link item: %s", e.frame.c_str());
                 LOG_DEBUG("\t %s", e.item->getData().name.c_str());
-                ConfigMap config{e.item->getData().getFullConfigMap()};
+                auto config = e.item->getData().getFullConfigMap();
                 // we are responsible
-                std::shared_ptr<DynamicObject> newFrame{control->physics->createFrame(dataBroker, config)};
+                auto newFrame = control->physics->createFrame(dataBroker, config);
 
-                // todo: set pose
-                const envire::core::Transform t{envireGraph->getTransform(SIM_CENTER_FRAME_NAME, e.frame)};
+                // TODO: set pose
+                const auto t = envireGraph->getTransform(SIM_CENTER_FRAME_NAME, e.frame);
                 newFrame->setPosition(t.transform.translation);
                 newFrame->setRotation(t.transform.orientation);
 
@@ -158,7 +158,7 @@ namespace mars
 
         void EnvireOdePhysicsPlugins::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::Inertial>>& e)
         {
-            std::shared_ptr<SubControlCenter> control{getControlCenter(e.frame)};
+            auto control = getControlCenter(e.frame);
             if(!control)
             {
                 LOG_ERROR("EnvireOdePhysicsPlugins::itemAdded: no control found!");
@@ -168,12 +168,12 @@ namespace mars
             {
                 LOG_WARN("OdePhysicsPlugin: Added envire::base_types::Inertia item: %s", e.frame.c_str());
                 // todo: check that we really have the frame in the map
-                const envire::core::GraphTraits::vertex_descriptor vertex{envireGraph->vertex(e.frame)};
-                envire::core::GraphTraits::vertex_descriptor& parentVertex = graphTreeView->tree[vertex].parent;
-                const envire::core::FrameId parentFrame{envireGraph->getFrameId(parentVertex)};
+                const auto& vertex = envireGraph->vertex(e.frame);
+                const auto& parentVertex = graphTreeView->tree[vertex].parent;
+                const auto& parentFrame = envireGraph->getFrameId(parentVertex);
                 LOG_INFO("parent Frame: %s", parentFrame.c_str());
 
-                ConfigMap config{e.item->getData().getFullConfigMap()};
+                auto config = e.item->getData().getFullConfigMap();
                 config["parentFrame"] = parentFrame;
                 // config["name"]
                 // config["mass"]
@@ -191,9 +191,9 @@ namespace mars
                 config["inertia"]["i22"] = config["zz"];
                 // --------------------------------
                 // todo: check hirarchy issues with closed loops
-                const envire::core::Transform t{envireGraph->getTransform(parentVertex, vertex)};
-                vectorToConfigItem(&(config["position"]), &(t.transform.translation));
-                quaternionToConfigItem(&(config["orientation"]), &(t.transform.orientation));
+                const auto& t = envireGraph->getTransform(parentVertex, vertex);
+                utils::vectorToConfigItem(&(config["position"]), &(t.transform.translation));
+                utils::quaternionToConfigItem(&(config["orientation"]), &(t.transform.orientation));
                 control->physics->createObject(config);
             }
         }
@@ -204,8 +204,8 @@ namespace mars
             LOG_DEBUG_S << "OdePhysicsPlugin: Added envire::base_types::joints::Fixed item: " << e.frame;
             LOG_DEBUG_S << "joint name: " << e.item->getData().name;
 
-            envire::base_types::joints::Fixed &joint = e.item->getData();
-            ConfigMap config{joint.getFullConfigMap()};
+            auto& joint = e.item->getData();
+            auto config = joint.getFullConfigMap();
 
             // find the parent and child links that are connected by the joint
             setLinksFixedJoint(config, e.frame);
@@ -220,8 +220,8 @@ namespace mars
             LOG_DEBUG_S << "OdePhysicsPlugin: Added envire::base_types::joints::Revolute item: " << e.frame;
             LOG_DEBUG_S << "joint name: " << e.item->getData().name;
 
-            envire::base_types::joints::Revolute &joint = e.item->getData();
-            ConfigMap config{joint.getFullConfigMap()};
+            auto& joint = e.item->getData();
+            auto config = joint.getFullConfigMap();
             // TODO: change the type in mars to revolute in urdf loader
             config["type"] = "hinge";
 
@@ -237,8 +237,8 @@ namespace mars
             LOG_DEBUG_S << "OdePhysicsPlugin: Added envire::base_types::joints::Continuous item: " << e.frame;
             LOG_DEBUG_S << "joint name: " << e.item->getData().name;
 
-            envire::base_types::joints::Continuous &joint = e.item->getData();
-            ConfigMap config{joint.getFullConfigMap()};
+            auto& joint = e.item->getData();
+            auto config = joint.getFullConfigMap();
             // TODO: change the type in mars to revolute in urdf loader
             config["type"] = "hinge";
 
@@ -255,8 +255,8 @@ namespace mars
             LOG_DEBUG_S << "OdePhysicsPlugin: Added envire::base_types::joints::Prismatic item: " << e.frame;
             LOG_DEBUG_S << "joint name: " << e.item->getData().name;
 
-            envire::base_types::joints::Prismatic &joint = e.item->getData();
-            ConfigMap config{joint.getFullConfigMap()};
+            auto& joint = e.item->getData();
+            auto config = joint.getFullConfigMap();
             // TODO: change the type in mars to revolute in urdf loader
             config["type"] = "prismatic";
 
@@ -268,17 +268,13 @@ namespace mars
 
         void EnvireOdePhysicsPlugins::setLinksFixedJoint(configmaps::ConfigMap &config, const envire::core::FrameId &frameId)
         {
-            using LinkItem = envire::core::Item<::envire::base_types::Link>;
-            using LinkItemItr = envire::core::EnvireGraph::ItemIterator<LinkItem>;
-            using VertexDesc = envire::core::GraphTraits::vertex_descriptor;
-
             // the parent link is stored in the parent frame
             // the child link is stored in the same frame as fixed joint
-            const VertexDesc vertex{envireGraph->getVertex(frameId)};
+            const auto& vertex = envireGraph->getVertex(frameId);
 
             // get link from parent frame as parent link for a joint
-            const VertexDesc parentVertex{graphTreeView->getParent(vertex)};
-            const envire::core::FrameId parentFrameId{envireGraph->getFrameId(parentVertex)};
+            const auto& parentVertex = graphTreeView->getParent(vertex);
+            const auto& parentFrameId = envireGraph->getFrameId(parentVertex);
 
             if (!containsOneLink(parentFrameId))
             {
@@ -286,19 +282,19 @@ namespace mars
                 return;
             }
 
-            LinkItemItr parentLinkItemItr{envireGraph->getItem<LinkItem>(parentFrameId)};
-            envire::base_types::Link &parentLink = parentLinkItemItr->getData();
+            auto parentLinkItemItr = envireGraph->getItem<envire::core::Item<::envire::base_types::Link>>(parentFrameId);
+            auto& parentLink = parentLinkItemItr->getData();
 
             // get link from the same frame as child link for a joint
-            const envire::core::FrameId childFrameId{frameId};
+            const auto& childFrameId = frameId;
 
             if (!containsOneLink(childFrameId))
             {
                 LOG_ERROR_S << "Can not create a new joint";
                 return;
             }
-            LinkItemItr childLinkItemItr{envireGraph->getItem<LinkItem>(childFrameId)};
-            envire::base_types::Link &childLink = childLinkItemItr->getData();
+            auto childLinkItemItr = envireGraph->getItem<envire::core::Item<::envire::base_types::Link>>(childFrameId);
+            const auto& childLink = childLinkItemItr->getData();
 
             // set connected links
             config["parent_link_name"] = parentLink.name;
@@ -307,17 +303,13 @@ namespace mars
 
         void EnvireOdePhysicsPlugins::setLinksDynamicJoint(configmaps::ConfigMap &config, const envire::core::FrameId &frameId)
         {
-                using LinkItem = envire::core::Item<::envire::base_types::Link>;
-                using LinkItemItr = envire::core::EnvireGraph::ItemIterator<LinkItem>;
-                using VertexDesc = envire::core::GraphTraits::vertex_descriptor;
-
                 // the parent link is stored in the parent frame
                 // the child link is stored in the child frame as fixed joint
-                const VertexDesc vertex{envireGraph->getVertex(frameId)};
+                const auto& vertex = envireGraph->getVertex(frameId);
 
                 // get link from parent frame as parent link for a joint
-                const VertexDesc parentVertex{graphTreeView->getParent(vertex)};
-                const envire::core::FrameId parentFrameId{envireGraph->getFrameId(parentVertex)};
+                const auto& parentVertex = graphTreeView->getParent(vertex);
+                const auto& parentFrameId = envireGraph->getFrameId(parentVertex);
 
                 if (!containsOneLink(parentFrameId))
                 {
@@ -325,12 +317,12 @@ namespace mars
                     return;
                 }
 
-                LinkItemItr parentLinkItemItr{envireGraph->getItem<LinkItem>(parentFrameId)};
-                envire::base_types::Link &parentLink = parentLinkItemItr->getData();
+                auto parentLinkItemItr = envireGraph->getItem<envire::core::Item<::envire::base_types::Link>>(parentFrameId);
+                const auto& parentLink = parentLinkItemItr->getData();
 
                 // get link from child frame as child link for a joint
                 // there should be only one child frame, which is connected to joint frame
-                const std::unordered_set<VertexDesc>& children = graphTreeView->tree[vertex].children;
+                const auto& children = graphTreeView->tree[vertex].children;
                 if (children.size() == 0)
                 {
                     LOG_ERROR_S << "Can not create a new joint, since the frame " << frameId << " contains no child frame.";
@@ -342,16 +334,16 @@ namespace mars
                 }
 
                 auto itr = children.begin();
-                const VertexDesc childVertex = *(itr);
-                envire::core::FrameId childFrameId{envireGraph->getFrameId(childVertex)};
+                const auto& childVertex = *(itr);
+                const auto& childFrameId = envireGraph->getFrameId(childVertex);
 
                 if (!containsOneLink(childFrameId))
                 {
                     LOG_ERROR_S << "Can not create a new joint";
                     return;
                 }
-                LinkItemItr childLinkItemItr{envireGraph->getItem<LinkItem>(childFrameId)};
-                envire::base_types::Link &childLink = childLinkItemItr->getData();
+                auto childLinkItemItr = envireGraph->getItem<envire::core::Item<::envire::base_types::Link>>(childFrameId);
+                const auto& childLink = childLinkItemItr->getData();
 
                 // set connected links
                 config["parent_link_name"] = parentLink.name;
@@ -360,7 +352,7 @@ namespace mars
 
         void EnvireOdePhysicsPlugins::createPhysicJoint(configmaps::ConfigMap &config, const envire::core::FrameId &frameId)
         {
-            std::shared_ptr<SubControlCenter> control{getControlCenter(frameId)};
+            auto control = getControlCenter(frameId);
             if(!control)
             {
                 LOG_ERROR_S << "EnvireOdePhysicsPlugins::itemAdded: no control found!";
@@ -370,14 +362,14 @@ namespace mars
             if(control->physics->getLibName() == "mars_ode_physics")
             {
                 // set absolute position of joint
-                const envire::core::Transform trans{envireGraph->getTransform(SIM_CENTER_FRAME_NAME, frameId)};
-                const Vector anchor{trans.transform.translation};
+                const auto& trans = envireGraph->getTransform(SIM_CENTER_FRAME_NAME, frameId);
+                const auto& anchor = trans.transform.translation;
                 config["anchor"]["x"] = anchor.x();
                 config["anchor"]["y"] = anchor.y();
                 config["anchor"]["z"] = anchor.z();
 
                 // set absolute orientation of axis
-                Vector axis(config["axis"]["x"], config["axis"]["y"], config["axis"]["z"]);
+                Vector axis{config["axis"]["x"], config["axis"]["y"], config["axis"]["z"]};
                 axis = trans.transform.orientation*axis;
                 // todo: add assumption that joint axis is defined in childlink coordinates?
                 config["axis1"]["x"] = axis.x();
@@ -387,7 +379,7 @@ namespace mars
                 // reduce DataBroker load
                 config["reducedDataPackage"] = true;
 
-                std::shared_ptr<JointInterface> jInterface{control->physics->createJoint(dataBroker, config)};
+                const auto& jInterface = control->physics->createJoint(dataBroker, config);
                 // store JointInterface in graph
                 JointInterfaceItem item;
                 item.jointInterface = jInterface;
@@ -395,7 +387,7 @@ namespace mars
                 envireGraph->addItemToFrame(frameId, jointItemPtr);
 
                 // id == 0 is invalid indicating getID that no specific id is desired
-                const unsigned long desiredId = config.get("desired_id", 0);
+                const auto desiredId = static_cast<unsigned long>(config.get("desired_id", 0));
                 ControlCenter::jointIDManager->addIfUnknown(config["name"], desiredId);
             }
         }
