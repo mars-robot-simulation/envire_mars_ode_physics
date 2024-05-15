@@ -61,13 +61,13 @@ namespace mars
         void EnvireOdePhysicsPlugins::init(void)
         {
             //GraphEventDispatcher::subscribe(envireGraph.get());
-            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::Link>>::subscribe(envireGraph.get());
-            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::Inertial>>::subscribe(envireGraph.get());
+            GraphItemEventDispatcher<envire::core::Item<::envire::types::Link>>::subscribe(envireGraph.get());
+            GraphItemEventDispatcher<envire::core::Item<::envire::types::Inertial>>::subscribe(envireGraph.get());
 
-            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::joints::Fixed>>::subscribe(envireGraph.get());
-            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::joints::Revolute>>::subscribe(envireGraph.get());
-            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::joints::Continuous>>::subscribe(envireGraph.get());
-            GraphItemEventDispatcher<envire::core::Item<::envire::base_types::joints::Prismatic>>::subscribe(envireGraph.get());
+            GraphItemEventDispatcher<envire::core::Item<::envire::types::joints::Fixed>>::subscribe(envireGraph.get());
+            GraphItemEventDispatcher<envire::core::Item<::envire::types::joints::Revolute>>::subscribe(envireGraph.get());
+            GraphItemEventDispatcher<envire::core::Item<::envire::types::joints::Continuous>>::subscribe(envireGraph.get());
+            GraphItemEventDispatcher<envire::core::Item<::envire::types::joints::Prismatic>>::subscribe(envireGraph.get());
         }
 
         /*
@@ -123,7 +123,7 @@ namespace mars
             LOG_DEBUG("\tclassName: %s", e.item->getClassName().c_str());
         }
 
-        void EnvireOdePhysicsPlugins::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::Link>>& e)
+        void EnvireOdePhysicsPlugins::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::types::Link>>& e)
         {
             auto control = getControlCenter(e.frame);
 
@@ -135,7 +135,7 @@ namespace mars
             // TODO: why we need to hardcode the name of the lib???
             if(control->physics->getLibName() == "mars_ode_physics")
             {
-                LOG_WARN("OdePhysicsPlugin: Added envire::base_types::Link item: %s", e.frame.c_str());
+                LOG_WARN("OdePhysicsPlugin: Added envire::types::Link item: %s", e.frame.c_str());
                 LOG_DEBUG("\t %s", e.item->getData().name.c_str());
                 auto config = e.item->getData().getFullConfigMap();
                 // we are responsible
@@ -156,7 +156,7 @@ namespace mars
             }
         }
 
-        void EnvireOdePhysicsPlugins::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::Inertial>>& e)
+        void EnvireOdePhysicsPlugins::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::types::Inertial>>& e)
         {
             auto control = getControlCenter(e.frame);
             if(!control)
@@ -166,7 +166,7 @@ namespace mars
             // TODO: why we need to hardcode the name of the lib???
             if(control->physics->getLibName() == "mars_ode_physics")
             {
-                LOG_WARN("OdePhysicsPlugin: Added envire::base_types::Inertia item: %s", e.frame.c_str());
+                LOG_WARN("OdePhysicsPlugin: Added envire::types::Inertia item: %s", e.frame.c_str());
                 // todo: check that we really have the frame in the map
                 const auto& vertex = envireGraph->vertex(e.frame);
                 const auto& parentVertex = graphTreeView->tree[vertex].parent;
@@ -198,10 +198,10 @@ namespace mars
             }
         }
 
-        void EnvireOdePhysicsPlugins::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::joints::Fixed>>& e)
+        void EnvireOdePhysicsPlugins::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::types::joints::Fixed>>& e)
         {
-            LOG_WARN("OdePhysicsPlugin: Added envire::base_types::joints::Fixed item: %s", e.frame.c_str());
-            LOG_DEBUG_S << "OdePhysicsPlugin: Added envire::base_types::joints::Fixed item: " << e.frame;
+            LOG_WARN("OdePhysicsPlugin: Added envire::types::joints::Fixed item: %s", e.frame.c_str());
+            LOG_DEBUG_S << "OdePhysicsPlugin: Added envire::types::joints::Fixed item: " << e.frame;
             LOG_DEBUG_S << "joint name: " << e.item->getData().name;
 
             auto& joint = e.item->getData();
@@ -213,11 +213,11 @@ namespace mars
             createPhysicJoint(config, e.frame);
         }
 
-        void EnvireOdePhysicsPlugins::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::joints::Revolute>>& e)
+        void EnvireOdePhysicsPlugins::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::types::joints::Revolute>>& e)
         {
 
-            LOG_WARN("OdePhysicsPlugin: Added envire::base_types::joints::Revolute item: %s", e.frame.c_str());
-            LOG_DEBUG_S << "OdePhysicsPlugin: Added envire::base_types::joints::Revolute item: " << e.frame;
+            LOG_WARN("OdePhysicsPlugin: Added envire::types::joints::Revolute item: %s", e.frame.c_str());
+            LOG_DEBUG_S << "OdePhysicsPlugin: Added envire::types::joints::Revolute item: " << e.frame;
             LOG_DEBUG_S << "joint name: " << e.item->getData().name;
 
             auto& joint = e.item->getData();
@@ -231,10 +231,10 @@ namespace mars
             createPhysicJoint(config, e.frame);
         }
 
-        void EnvireOdePhysicsPlugins::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::joints::Continuous>>& e)
+        void EnvireOdePhysicsPlugins::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::types::joints::Continuous>>& e)
         {
-            LOG_WARN("OdePhysicsPlugin: Added envire::base_types::joints::Continuous item: %s", e.frame.c_str());
-            LOG_DEBUG_S << "OdePhysicsPlugin: Added envire::base_types::joints::Continuous item: " << e.frame;
+            LOG_WARN("OdePhysicsPlugin: Added envire::types::joints::Continuous item: %s", e.frame.c_str());
+            LOG_DEBUG_S << "OdePhysicsPlugin: Added envire::types::joints::Continuous item: " << e.frame;
             LOG_DEBUG_S << "joint name: " << e.item->getData().name;
 
             auto& joint = e.item->getData();
@@ -248,11 +248,11 @@ namespace mars
             createPhysicJoint(config, e.frame);
         }
 
-        void EnvireOdePhysicsPlugins::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::joints::Prismatic>>& e)
+        void EnvireOdePhysicsPlugins::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::types::joints::Prismatic>>& e)
         {
 
-            LOG_WARN("OdePhysicsPlugin: Added envire::base_types::joints::Prismatic item: %s", e.frame.c_str());
-            LOG_DEBUG_S << "OdePhysicsPlugin: Added envire::base_types::joints::Prismatic item: " << e.frame;
+            LOG_WARN("OdePhysicsPlugin: Added envire::types::joints::Prismatic item: %s", e.frame.c_str());
+            LOG_DEBUG_S << "OdePhysicsPlugin: Added envire::types::joints::Prismatic item: " << e.frame;
             LOG_DEBUG_S << "joint name: " << e.item->getData().name;
 
             auto& joint = e.item->getData();
@@ -282,7 +282,7 @@ namespace mars
                 return;
             }
 
-            auto parentLinkItemItr = envireGraph->getItem<envire::core::Item<::envire::base_types::Link>>(parentFrameId);
+            auto parentLinkItemItr = envireGraph->getItem<envire::core::Item<::envire::types::Link>>(parentFrameId);
             auto& parentLink = parentLinkItemItr->getData();
 
             // get link from the same frame as child link for a joint
@@ -293,7 +293,7 @@ namespace mars
                 LOG_ERROR_S << "Can not create a new joint";
                 return;
             }
-            auto childLinkItemItr = envireGraph->getItem<envire::core::Item<::envire::base_types::Link>>(childFrameId);
+            auto childLinkItemItr = envireGraph->getItem<envire::core::Item<::envire::types::Link>>(childFrameId);
             const auto& childLink = childLinkItemItr->getData();
 
             // set connected links
@@ -317,7 +317,7 @@ namespace mars
                     return;
                 }
 
-                auto parentLinkItemItr = envireGraph->getItem<envire::core::Item<::envire::base_types::Link>>(parentFrameId);
+                auto parentLinkItemItr = envireGraph->getItem<envire::core::Item<::envire::types::Link>>(parentFrameId);
                 const auto& parentLink = parentLinkItemItr->getData();
 
                 // get link from child frame as child link for a joint
@@ -342,7 +342,7 @@ namespace mars
                     LOG_ERROR_S << "Can not create a new joint";
                     return;
                 }
-                auto childLinkItemItr = envireGraph->getItem<envire::core::Item<::envire::base_types::Link>>(childFrameId);
+                auto childLinkItemItr = envireGraph->getItem<envire::core::Item<::envire::types::Link>>(childFrameId);
                 const auto& childLink = childLinkItemItr->getData();
 
                 // set connected links
@@ -395,7 +395,7 @@ namespace mars
         bool EnvireOdePhysicsPlugins::containsOneLink(const envire::core::FrameId &frameId) const
         {
             // check if there is only one link item in the parent frame
-            const size_t num_links = envireGraph->getItemCount<envire::core::Item<::envire::base_types::Link>>(frameId);
+            const size_t num_links = envireGraph->getItemCount<envire::core::Item<::envire::types::Link>>(frameId);
             if (num_links == 0)
             {
                 LOG_ERROR_S << "The frame " << frameId << " does not contain a link item.";

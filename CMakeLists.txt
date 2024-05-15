@@ -32,7 +32,7 @@ pkg_check_modules(PKGCONFIG REQUIRED
     configmaps
     mars_ode_physics
     envire_core
-    envire_base_types
+    envire_types
     data_broker
 )
 

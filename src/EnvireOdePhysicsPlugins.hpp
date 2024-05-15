@@ -13,12 +13,12 @@
 #include <envire_core/events/GraphEventDispatcher.hpp>
 #include <envire_core/events/GraphItemEventDispatcher.hpp>
 
-#include <envire_base_types/Link.hpp>
-#include <envire_base_types/Inertial.hpp>
-#include <envire_base_types/joints/Fixed.hpp>
-#include <envire_base_types/joints/Revolute.hpp>
-#include <envire_base_types/joints/Continuous.hpp>
-#include <envire_base_types/joints/Prismatic.hpp>
+#include <envire_types/Link.hpp>
+#include <envire_types/Inertial.hpp>
+#include <envire_types/joints/Fixed.hpp>
+#include <envire_types/joints/Revolute.hpp>
+#include <envire_types/joints/Continuous.hpp>
+#include <envire_types/joints/Prismatic.hpp>
 
 #include <lib_manager/LibInterface.hpp>
 #include <data_broker/DataBrokerInterface.h>
@@ -42,12 +42,12 @@ namespace mars
         // move the typedef to separate file
         class EnvireOdePhysicsPlugins : public lib_manager::LibInterface,
                                         public envire::core::GraphEventDispatcher,
-                                        public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::Link>>,
-                                        public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::Inertial>>,
-                                        public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::joints::Fixed>>,
-                                        public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::joints::Revolute>>,
-                                        public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::joints::Continuous>>,
-                                        public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::base_types::joints::Prismatic>>
+                                        public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::types::Link>>,
+                                        public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::types::Inertial>>,
+                                        public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::types::joints::Fixed>>,
+                                        public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::types::joints::Revolute>>,
+                                        public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::types::joints::Continuous>>,
+                                        public envire::core::GraphItemEventDispatcher<envire::core::Item<::envire::types::joints::Prismatic>>
 
         {
 
@@ -77,13 +77,13 @@ namespace mars
             // envire callbacks
             virtual void itemAdded(const envire::core::ItemAddedEvent& e) override;
 
-            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::Link>>& e) override;
-            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::Inertial>>& e) override;
+            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::types::Link>>& e) override;
+            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::types::Inertial>>& e) override;
 
-            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::joints::Fixed>>& e) override;
-            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::joints::Revolute>>& e) override;
-            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::joints::Continuous>>& e) override;
-            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::base_types::joints::Prismatic>>& e) override;
+            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::types::joints::Fixed>>& e) override;
+            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::types::joints::Revolute>>& e) override;
+            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::types::joints::Continuous>>& e) override;
+            virtual void itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::types::joints::Prismatic>>& e) override;
 
         private:
             std::shared_ptr<envire::core::EnvireGraph> envireGraph;
