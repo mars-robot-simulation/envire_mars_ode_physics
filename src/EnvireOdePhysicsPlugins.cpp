@@ -152,7 +152,6 @@ namespace mars
                 item.pluginName = control->physics->getLibName();
                 envire::core::Item<DynamicObjectItem>::Ptr objectItemPtr{new envire::core::Item<DynamicObjectItem>{item}};
                 envireGraph->addItemToFrame(e.frame, objectItemPtr);
-                ControlCenter::linkIDManager->addIfUnknown(config["name"]);
             }
         }
 
