@@ -387,7 +387,7 @@ namespace mars
 
                 // id == 0 is invalid indicating getID that no specific id is desired
                 const auto desiredId = static_cast<unsigned long>(config.get("desired_id", 0));
-                ControlCenter::jointIDManager->addIfUnknown(config["name"], desiredId);
+                // TODO: Enable requesting desired id for added joint
             }
         }
 
