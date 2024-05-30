@@ -200,8 +200,6 @@ namespace mars
         void EnvireOdePhysicsPlugins::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::types::joints::Fixed>>& e)
         {
             LOG_WARN("OdePhysicsPlugin: Added envire::types::joints::Fixed item: %s", e.frame.c_str());
-            LOG_DEBUG_S << "OdePhysicsPlugin: Added envire::types::joints::Fixed item: " << e.frame;
-            LOG_DEBUG_S << "joint name: " << e.item->getData().name;
 
             auto& joint = e.item->getData();
             auto config = joint.getFullConfigMap();
@@ -216,8 +214,6 @@ namespace mars
         {
 
             LOG_WARN("OdePhysicsPlugin: Added envire::types::joints::Revolute item: %s", e.frame.c_str());
-            LOG_DEBUG_S << "OdePhysicsPlugin: Added envire::types::joints::Revolute item: " << e.frame;
-            LOG_DEBUG_S << "joint name: " << e.item->getData().name;
 
             auto& joint = e.item->getData();
             auto config = joint.getFullConfigMap();
@@ -233,8 +229,6 @@ namespace mars
         void EnvireOdePhysicsPlugins::itemAdded(const envire::core::TypedItemAddedEvent<envire::core::Item<::envire::types::joints::Continuous>>& e)
         {
             LOG_WARN("OdePhysicsPlugin: Added envire::types::joints::Continuous item: %s", e.frame.c_str());
-            LOG_DEBUG_S << "OdePhysicsPlugin: Added envire::types::joints::Continuous item: " << e.frame;
-            LOG_DEBUG_S << "joint name: " << e.item->getData().name;
 
             auto& joint = e.item->getData();
             auto config = joint.getFullConfigMap();
@@ -251,8 +245,6 @@ namespace mars
         {
 
             LOG_WARN("OdePhysicsPlugin: Added envire::types::joints::Prismatic item: %s", e.frame.c_str());
-            LOG_DEBUG_S << "OdePhysicsPlugin: Added envire::types::joints::Prismatic item: " << e.frame;
-            LOG_DEBUG_S << "joint name: " << e.item->getData().name;
 
             auto& joint = e.item->getData();
             auto config = joint.getFullConfigMap();
@@ -277,7 +269,7 @@ namespace mars
 
             if (!containsOneLink(parentFrameId))
             {
-                LOG_ERROR_S << "Can not create a new joint";
+                LOG_ERROR("Can not create a new joint");
                 return;
             }
 
@@ -289,7 +281,7 @@ namespace mars
 
             if (!containsOneLink(childFrameId))
             {
-                LOG_ERROR_S << "Can not create a new joint";
+                LOG_ERROR("Can not create a new joint");
                 return;
             }
             auto childLinkItemItr = envireGraph->getItem<envire::core::Item<::envire::types::Link>>(childFrameId);
@@ -312,7 +304,7 @@ namespace mars
 
                 if (!containsOneLink(parentFrameId))
                 {
-                    LOG_ERROR_S << "Can not create a new joint";
+                    LOG_ERROR("Can not create a new joint");
                     return;
                 }
 
@@ -324,11 +316,11 @@ namespace mars
                 const auto& children = graphTreeView->tree[vertex].children;
                 if (children.size() == 0)
                 {
-                    LOG_ERROR_S << "Can not create a new joint, since the frame " << frameId << " contains no child frame.";
+                    LOG_ERROR("Cannot create a new joint, since the frame %s contains no child frame.", frameId);
                     return;
                 } else if (children.size() > 1)
                 {
-                    LOG_ERROR_S << "Can not create a new joint, since the frame " << frameId << " contains several child frames.";
+                    LOG_ERROR("Cannot create a new joint, since the frame %s contains several child frames.", frameId);
                     return;
                 }
 
@@ -338,7 +330,7 @@ namespace mars
 
                 if (!containsOneLink(childFrameId))
                 {
-                    LOG_ERROR_S << "Can not create a new joint";
+                    LOG_ERROR("Can not create a new joint");
                     return;
                 }
                 auto childLinkItemItr = envireGraph->getItem<envire::core::Item<::envire::types::Link>>(childFrameId);
@@ -354,7 +346,7 @@ namespace mars
             auto control = getControlCenter(frameId);
             if(!control)
             {
-                LOG_ERROR_S << "EnvireOdePhysicsPlugins::itemAdded: no control found!";
+                LOG_ERROR("EnvireOdePhysicsPlugins::itemAdded: no control found!");
                 return;
             }
             // TODO: why we need to hardcode the name of the lib???
@@ -397,11 +389,11 @@ namespace mars
             const size_t num_links = envireGraph->getItemCount<envire::core::Item<::envire::types::Link>>(frameId);
             if (num_links == 0)
             {
-                LOG_ERROR_S << "The frame " << frameId << " does not contain a link item.";
+                LOG_ERROR("The frame %s does not contain a link item.", frameId);
                 return false;
             } else if (num_links > 1)
             {
-                LOG_ERROR_S << "There are multiple link items in the frame " << frameId << ".";
+                LOG_ERROR("There are multiple link items in the frame %s.", frameId);
                 return false;
             }
 
