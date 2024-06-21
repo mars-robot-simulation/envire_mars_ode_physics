@@ -138,18 +138,19 @@ namespace mars
                 LOG_WARN("OdePhysicsPlugin: Added envire::types::Link item: %s", e.frame.c_str());
                 LOG_DEBUG("\t %s", e.item->getData().name.c_str());
                 auto config = e.item->getData().getFullConfigMap();
-                // we are responsible
-                auto newFrame = control->physics->createFrame(dataBroker, config);
 
-                // TODO: set pose
-                const auto t = envireGraph->getTransform(SIM_CENTER_FRAME_NAME, e.frame);
-                newFrame->setPosition(t.transform.translation);
-                newFrame->setRotation(t.transform.orientation);
+                auto item = [this, &e, &control, &config]()
+                {
+                    auto newFrame = control->physics->createFrame(this->dataBroker, config);
 
+                    // TODO: set pose
+                    const auto t = envireGraph->getTransform(SIM_CENTER_FRAME_NAME, e.frame);
+                    newFrame->setPosition(t.transform.translation);
+                    newFrame->setRotation(t.transform.orientation);
+
+                    return DynamicObjectItem{std::move(newFrame), control->physics->getLibName()};
+                }();
                 // store DynamicObject in graph
-                DynamicObjectItem item;
-                item.dynamicObject = newFrame;
-                item.pluginName = control->physics->getLibName();
                 envire::core::Item<DynamicObjectItem>::Ptr objectItemPtr{new envire::core::Item<DynamicObjectItem>{item}};
                 envireGraph->addItemToFrame(e.frame, objectItemPtr);
             }
