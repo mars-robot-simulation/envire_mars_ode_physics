@@ -220,6 +220,8 @@ namespace mars
             auto config = joint.getFullConfigMap();
             // TODO: change the type in mars to revolute in urdf loader
             config["type"] = "hinge";
+            // reduce DataBroker load
+            config["reducedDataPackage"] = true;
 
             // find the parent and child links that are connected by the joint
             setLinksDynamicJoint(config, e.frame);
@@ -235,6 +237,8 @@ namespace mars
             auto config = joint.getFullConfigMap();
             // TODO: change the type in mars to revolute in urdf loader
             config["type"] = "hinge";
+            // reduce DataBroker load
+            config["reducedDataPackage"] = true;
 
             // find the parent and child links that are connected by the joint
             setLinksDynamicJoint(config, e.frame);
@@ -251,6 +255,8 @@ namespace mars
             auto config = joint.getFullConfigMap();
             // TODO: change the type in mars to revolute in urdf loader
             config["type"] = "prismatic";
+            // reduce DataBroker load
+            config["reducedDataPackage"] = true;
 
             // find the parent and child links that are connected by the joint
             setLinksDynamicJoint(config, e.frame);
@@ -367,9 +373,6 @@ namespace mars
                 config["axis1"]["x"] = axis.x();
                 config["axis1"]["y"] = axis.y();
                 config["axis1"]["z"] = axis.z();
-
-                // reduce DataBroker load
-                config["reducedDataPackage"] = true;
 
                 const auto& jInterface = control->physics->createJoint(dataBroker, config);
                 // store JointInterface in graph
