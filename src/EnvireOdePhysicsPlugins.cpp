@@ -136,7 +136,7 @@ namespace mars
             if(control->physics->getLibName() == "mars_ode_physics")
             {
                 LOG_WARN("OdePhysicsPlugin: Added envire::types::Link item: %s", e.frame.c_str());
-                LOG_DEBUG("\t %s", e.item->getData().name.c_str());
+                LOG_DEBUG("\t %s", e.item->getData().getName().c_str());
                 auto config = e.item->getData().getFullConfigMap();
 
                 auto item = [this, &e, &control, &config]()
@@ -281,7 +281,7 @@ namespace mars
             }
 
             auto parentLinkItemItr = envireGraph->getItem<envire::core::Item<::envire::types::Link>>(parentFrameId);
-            auto& parentLink = parentLinkItemItr->getData();
+            auto parentLink = parentLinkItemItr->getData();
 
             // get link from the same frame as child link for a joint
             const auto& childFrameId = frameId;
@@ -292,11 +292,11 @@ namespace mars
                 return;
             }
             auto childLinkItemItr = envireGraph->getItem<envire::core::Item<::envire::types::Link>>(childFrameId);
-            const auto& childLink = childLinkItemItr->getData();
+            const auto childLink = childLinkItemItr->getData();
 
             // set connected links
-            config["parent_link_name"] = parentLink.name;
-            config["child_link_name"] = childLink.name;
+            config["parent_link_name"] = parentLink.getName();
+            config["child_link_name"] = childLink.getName();
         }
 
         void EnvireOdePhysicsPlugins::setLinksDynamicJoint(configmaps::ConfigMap &config, const envire::core::FrameId &frameId)
@@ -344,8 +344,8 @@ namespace mars
                 const auto& childLink = childLinkItemItr->getData();
 
                 // set connected links
-                config["parent_link_name"] = parentLink.name;
-                config["child_link_name"] = childLink.name;
+                config["parent_link_name"] = parentLink.getName();
+                config["child_link_name"] = childLink.getName();
         }
 
         void EnvireOdePhysicsPlugins::createPhysicJoint(configmaps::ConfigMap &config, const envire::core::FrameId &frameId)
