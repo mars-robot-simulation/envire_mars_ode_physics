@@ -56,10 +56,25 @@ namespace mars
 
         EnvireOdePhysicsPlugins::~EnvireOdePhysicsPlugins()
         {
+            // unsubscribe from envire graph
+            GraphItemEventDispatcher<envire::core::Item<::envire::types::Link>>::unsubscribe();
+            GraphItemEventDispatcher<envire::core::Item<::envire::types::Inertial>>::unsubscribe();
+
+            GraphItemEventDispatcher<envire::core::Item<::envire::types::joints::Fixed>>::unsubscribe();
+            GraphItemEventDispatcher<envire::core::Item<::envire::types::joints::Revolute>>::unsubscribe();
+            GraphItemEventDispatcher<envire::core::Item<::envire::types::joints::Continuous>>::unsubscribe();
+            GraphItemEventDispatcher<envire::core::Item<::envire::types::joints::Prismatic>>::unsubscribe();
+
+            // release mars_core
+            if(libManager) libManager->releaseLibrary("mars_core");
         }
 
         void EnvireOdePhysicsPlugins::init(void)
         {
+            // the envire graph is cleard by mars_core, so we have to ensure
+            // that mars_core is not deleted before this library
+            if(libManager) libManager->acquireLibrary("mars_core");
+
             //GraphEventDispatcher::subscribe(envireGraph.get());
             GraphItemEventDispatcher<envire::core::Item<::envire::types::Link>>::subscribe(envireGraph.get());
             GraphItemEventDispatcher<envire::core::Item<::envire::types::Inertial>>::subscribe(envireGraph.get());
