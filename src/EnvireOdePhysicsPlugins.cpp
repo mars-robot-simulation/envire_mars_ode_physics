@@ -413,7 +413,8 @@ namespace mars
             const size_t num_links = envireGraph->getItemCount<envire::core::Item<::envire::types::Link>>(frameId);
             if (num_links == 0)
             {
-                LOG_ERROR("The frame %s does not contain a link item.", frameId.c_str());
+                // This does not have to be an error, it can be a disired use-case
+                // LOG_ERROR("The frame %s does not contain a link item.", frameId.c_str());
                 return false;
             } else if (num_links > 1)
             {
