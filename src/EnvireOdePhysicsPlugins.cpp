@@ -289,14 +289,16 @@ namespace mars
             const auto& parentVertex = graphTreeView->getParent(vertex);
             const auto& parentFrameId = envireGraph->getFrameId(parentVertex);
 
-            if (!containsOneLink(parentFrameId))
+            std::string parentLinkName = "";
+            // actually if we want to fix something in the world
+            // the parent doesn't have to have a link
+            if (containsOneLink(parentFrameId))
             {
-                LOG_ERROR("Can not create a new joint");
-                return;
+                auto parentLinkItemItr = envireGraph->getItem<envire::core::Item<::envire::types::Link>>(parentFrameId);
+                auto parentLink = parentLinkItemItr->getData();
+                parentLinkName = parentLink.getName();
             }
 
-            auto parentLinkItemItr = envireGraph->getItem<envire::core::Item<::envire::types::Link>>(parentFrameId);
-            auto parentLink = parentLinkItemItr->getData();
 
             // get link from the same frame as child link for a joint
             const auto& childFrameId = frameId;
@@ -310,7 +312,7 @@ namespace mars
             const auto childLink = childLinkItemItr->getData();
 
             // set connected links
-            config["parent_link_name"] = parentLink.getName();
+            config["parent_link_name"] = parentLinkName;
             config["child_link_name"] = childLink.getName();
         }
 
@@ -381,13 +383,16 @@ namespace mars
                 config["anchor"]["y"] = anchor.y();
                 config["anchor"]["z"] = anchor.z();
 
-                // set absolute orientation of axis
-                Vector axis{config["axis"]["x"], config["axis"]["y"], config["axis"]["z"]};
-                axis = trans.transform.orientation*axis;
-                // todo: add assumption that joint axis is defined in childlink coordinates?
-                config["axis1"]["x"] = axis.x();
-                config["axis1"]["y"] = axis.y();
-                config["axis1"]["z"] = axis.z();
+                if(config.hasKey("axis"))
+                {
+                    // set absolute orientation of axis
+                    Vector axis{config["axis"]["x"], config["axis"]["y"], config["axis"]["z"]};
+                    axis = trans.transform.orientation*axis;
+                    // todo: add assumption that joint axis is defined in childlink coordinates?
+                    config["axis1"]["x"] = axis.x();
+                    config["axis1"]["y"] = axis.y();
+                    config["axis1"]["z"] = axis.z();
+                }
 
                 const auto& jInterface = control->physics->createJoint(dataBroker, config);
                 // store JointInterface in graph
